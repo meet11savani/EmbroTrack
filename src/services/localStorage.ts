@@ -1,9 +1,11 @@
-import type { EmbroideryRecord, Party, Quality, AppSettings, BackupData } from '@/types';
+import type { EmbroideryRecord, Party, Quality, AppSettings, BackupData, Worker, WorkerTransaction } from '@/types';
 
 const KEYS = {
   records: 'he_records',
   parties: 'he_parties',
   qualities: 'he_qualities',
+  workers: 'he_workers',
+  workerTransactions: 'he_worker_transactions',
   settings: 'he_settings',
   syncQueue: 'he_sync_queue',
 } as const;
@@ -55,6 +57,20 @@ export const storage = {
     localStorage.setItem(KEYS.settings, JSON.stringify(settings));
   },
 
+  getWorkers(): Worker[] {
+    return safeParse<Worker[]>(localStorage.getItem(KEYS.workers), []);
+  },
+  saveWorkers(workers: Worker[]): void {
+    localStorage.setItem(KEYS.workers, JSON.stringify(workers));
+  },
+
+  getWorkerTransactions(): WorkerTransaction[] {
+    return safeParse<WorkerTransaction[]>(localStorage.getItem(KEYS.workerTransactions), []);
+  },
+  saveWorkerTransactions(transactions: WorkerTransaction[]): void {
+    localStorage.setItem(KEYS.workerTransactions, JSON.stringify(transactions));
+  },
+
   getSyncQueue(): SyncQueueItem[] {
     return safeParse<SyncQueueItem[]>(localStorage.getItem(KEYS.syncQueue), []);
   },
@@ -69,6 +85,8 @@ export const storage = {
       records: this.getRecords(),
       parties: this.getParties(),
       qualities: this.getQualities(),
+      workers: this.getWorkers(),
+      workerTransactions: this.getWorkerTransactions(),
       settings: this.getSettings(),
     };
   },
@@ -77,13 +95,15 @@ export const storage = {
     localStorage.removeItem(KEYS.records);
     localStorage.removeItem(KEYS.parties);
     localStorage.removeItem(KEYS.qualities);
+    localStorage.removeItem(KEYS.workers);
+    localStorage.removeItem(KEYS.workerTransactions);
     localStorage.removeItem(KEYS.syncQueue);
   },
 };
 
 export interface SyncQueueItem {
   id: string;
-  entityType: 'record' | 'party' | 'quality';
+  entityType: 'record' | 'party' | 'quality' | 'worker' | 'worker_transaction';
   operation: 'create' | 'update' | 'delete';
   entityId: string;
   data: unknown;

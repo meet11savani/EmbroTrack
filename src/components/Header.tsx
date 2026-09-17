@@ -12,6 +12,7 @@ const NAV_ITEMS = [
   { key: 'records', label: 'Records' },
   { key: 'parties', label: 'Parties' },
   { key: 'qualities', label: 'Qualities' },
+  { key: 'workers', label: 'Workers' },
   { key: 'settings', label: 'Settings' },
 ];
 

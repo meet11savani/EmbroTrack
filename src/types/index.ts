@@ -60,12 +60,50 @@ export interface AppSettings {
 
 export type EntityType = 'records' | 'parties' | 'qualities';
 
+export type WorkerTransactionType = 'salary' | 'withdrawal' | 'credit';
+
+export interface Worker {
+  id: string;
+  name: string;
+  phone: string;
+  role: string;
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+  syncStatus: SyncStatus;
+  deleted?: boolean;
+}
+
+export interface WorkerTransaction {
+  id: string;
+  workerId: string;
+  workerName: string;
+  type: WorkerTransactionType;
+  date: string;
+  amount: number;
+  description: string;
+  createdAt: string;
+  updatedAt: string;
+  syncStatus: SyncStatus;
+  deleted?: boolean;
+}
+
+export interface WorkerSummary {
+  totalSalary: number;
+  totalWithdrawal: number;
+  totalCredit: number;
+  balance: number;
+  transactionCount: number;
+}
+
 export interface BackupData {
   version: string;
   exportedAt: string;
   records: EmbroideryRecord[];
   parties: Party[];
   qualities: Quality[];
+  workers: Worker[];
+  workerTransactions: WorkerTransaction[];
   settings: AppSettings;
 }
 

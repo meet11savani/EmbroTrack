@@ -5,9 +5,10 @@ import { ToastContainer } from '@/components/Toast';
 import { Records } from '@/pages/records/Records';
 import { Parties } from '@/pages/parties/Parties';
 import { Qualities } from '@/pages/qualities/Qualities';
+import { Workers } from '@/pages/workers/Workers';
 import { Settings } from '@/pages/settings/Settings';
 
-type Tab = 'records' | 'parties' | 'qualities' | 'settings';
+type Tab = 'records' | 'parties' | 'qualities' | 'workers' | 'settings';
 
 function AppContent() {
   const { settings } = useApp();
@@ -64,6 +65,7 @@ function AppContent() {
         {activeTab === 'records' && <Records />}
         {activeTab === 'parties' && <Parties />}
         {activeTab === 'qualities' && <Qualities />}
+        {activeTab === 'workers' && <Workers />}
         {activeTab === 'settings' && <Settings />}
       </main>
 

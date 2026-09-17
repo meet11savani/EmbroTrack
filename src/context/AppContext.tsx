@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
-import type { EmbroideryRecord, Party, Quality, AppSettings, SyncStatus } from '@/types';
+import type { EmbroideryRecord, Party, Quality, AppSettings, SyncStatus, Worker, WorkerTransaction } from '@/types';
 import { storage } from '@/services/localStorage';
 import { addToSyncQueue, syncNow, getPendingCount, type SyncState } from '@/services/syncService';
 import { generateId, nowISO } from '@/utils/formatters';
@@ -15,6 +15,8 @@ interface AppContextValue {
   records: EmbroideryRecord[];
   parties: Party[];
   qualities: Quality[];
+  workers: Worker[];
+  workerTransactions: WorkerTransaction[];
   settings: AppSettings;
   syncState: SyncState;
   toasts: Toast[];
@@ -30,6 +32,14 @@ interface AppContextValue {
   addQuality: (data: Omit<Quality, 'id' | 'createdAt' | 'updatedAt' | 'syncStatus'>) => Quality;
   updateQuality: (id: string, data: Partial<Quality>) => void;
   deleteQuality: (id: string) => void;
+
+  addWorker: (data: Omit<Worker, 'id' | 'createdAt' | 'updatedAt' | 'syncStatus'>) => Worker;
+  updateWorker: (id: string, data: Partial<Worker>) => void;
+  deleteWorker: (id: string) => void;
+
+  addWorkerTransaction: (data: Omit<WorkerTransaction, 'id' | 'createdAt' | 'updatedAt' | 'syncStatus'>) => WorkerTransaction;
+  updateWorkerTransaction: (id: string, data: Partial<WorkerTransaction>) => void;
+  deleteWorkerTransaction: (id: string) => void;
 
   updateSettings: (data: Partial<AppSettings>) => void;
 
@@ -62,6 +72,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [records, setRecords] = useState<EmbroideryRecord[]>(() => storage.getRecords());
   const [parties, setParties] = useState<Party[]>(() => storage.getParties());
   const [qualities, setQualities] = useState<Quality[]>(() => storage.getQualities());
+  const [workers, setWorkers] = useState<Worker[]>(() => storage.getWorkers());
+  const [workerTransactions, setWorkerTransactions] = useState<WorkerTransaction[]>(() => storage.getWorkerTransactions());
   const [settings, setSettings] = useState<AppSettings>(() => storage.getSettings());
   const [syncState, setSyncState] = useState<SyncState>(DEFAULT_SYNC_STATE);
   const [toasts, setToasts] = useState<Toast[]>([]);
@@ -70,6 +82,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => { storage.saveRecords(records); }, [records]);
   useEffect(() => { storage.saveParties(parties); }, [parties]);
   useEffect(() => { storage.saveQualities(qualities); }, [qualities]);
+  useEffect(() => { storage.saveWorkers(workers); }, [workers]);
+  useEffect(() => { storage.saveWorkerTransactions(workerTransactions); }, [workerTransactions]);
   useEffect(() => { storage.saveSettings(settings); }, [settings]);
 
   // Update sync state based on pending count
@@ -84,7 +98,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (prev.status === 'error') return { ...prev, pendingCount: pending };
       return { ...prev, status: 'synced', pendingCount: 0 };
     });
-  }, [records, parties, qualities, settings.googleScriptUrl]);
+  }, [records, parties, qualities, workers, workerTransactions, settings.googleScriptUrl]);
 
   // Online/offline auto-sync
   useEffect(() => {
@@ -233,6 +247,79 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [settings.googleScriptUrl]);
 
+  const addWorker: AppContextValue['addWorker'] = useCallback((data) => {
+    const now = nowISO();
+    const newWorker: Worker = {
+      ...data,
+      id: generateId(),
+      createdAt: now,
+      updatedAt: now,
+      syncStatus: settings.googleScriptUrl ? 'pending' : 'local',
+    };
+    setWorkers((prev) => [...prev, newWorker]);
+    if (settings.googleScriptUrl) {
+      addToSyncQueue('worker', 'create', newWorker.id, newWorker);
+    }
+    return newWorker;
+  }, [settings.googleScriptUrl]);
+
+  const updateWorker: AppContextValue['updateWorker'] = useCallback((id, data) => {
+    setWorkers((prev) => prev.map((w) => {
+      if (w.id !== id) return w;
+      const merged = { ...w, ...data, updatedAt: nowISO(), syncStatus: settings.googleScriptUrl ? 'pending' as SyncStatus : 'local' as SyncStatus };
+      if (settings.googleScriptUrl) addToSyncQueue('worker', 'update', id, merged);
+      return merged;
+    }));
+    if (data.name) {
+      setWorkerTransactions((prev) => prev.map((t) =>
+        t.workerId === id ? { ...t, workerName: data.name!, updatedAt: nowISO() } : t
+      ));
+    }
+  }, [settings.googleScriptUrl]);
+
+  const deleteWorker: AppContextValue['deleteWorker'] = useCallback((id) => {
+    setWorkers((prev) => prev.map((w) =>
+      w.id === id ? { ...w, deleted: true, updatedAt: nowISO(), syncStatus: settings.googleScriptUrl ? 'pending' as SyncStatus : 'local' as SyncStatus } : w
+    ));
+    if (settings.googleScriptUrl) {
+      addToSyncQueue('worker', 'delete', id, { id });
+    }
+  }, [settings.googleScriptUrl]);
+
+  const addWorkerTransaction: AppContextValue['addWorkerTransaction'] = useCallback((data) => {
+    const now = nowISO();
+    const newTxn: WorkerTransaction = {
+      ...data,
+      id: generateId(),
+      createdAt: now,
+      updatedAt: now,
+      syncStatus: settings.googleScriptUrl ? 'pending' : 'local',
+    };
+    setWorkerTransactions((prev) => [...prev, newTxn]);
+    if (settings.googleScriptUrl) {
+      addToSyncQueue('worker_transaction', 'create', newTxn.id, newTxn);
+    }
+    return newTxn;
+  }, [settings.googleScriptUrl]);
+
+  const updateWorkerTransaction: AppContextValue['updateWorkerTransaction'] = useCallback((id, data) => {
+    setWorkerTransactions((prev) => prev.map((t) => {
+      if (t.id !== id) return t;
+      const merged = { ...t, ...data, updatedAt: nowISO(), syncStatus: settings.googleScriptUrl ? 'pending' as SyncStatus : 'local' as SyncStatus };
+      if (settings.googleScriptUrl) addToSyncQueue('worker_transaction', 'update', id, merged);
+      return merged;
+    }));
+  }, [settings.googleScriptUrl]);
+
+  const deleteWorkerTransaction: AppContextValue['deleteWorkerTransaction'] = useCallback((id) => {
+    setWorkerTransactions((prev) => prev.map((t) =>
+      t.id === id ? { ...t, deleted: true, updatedAt: nowISO(), syncStatus: settings.googleScriptUrl ? 'pending' as SyncStatus : 'local' as SyncStatus } : t
+    ));
+    if (settings.googleScriptUrl) {
+      addToSyncQueue('worker_transaction', 'delete', id, { id });
+    }
+  }, [settings.googleScriptUrl]);
+
   const updateSettings: AppContextValue['updateSettings'] = useCallback((data) => {
     setSettings((prev) => ({ ...prev, ...data }));
   }, []);
@@ -283,6 +370,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setRecords(d.records as EmbroideryRecord[]);
     setParties(d.parties as Party[]);
     setQualities(d.qualities as Quality[]);
+    setWorkers(Array.isArray(d.workers) ? d.workers as Worker[] : []);
+    setWorkerTransactions(Array.isArray(d.workerTransactions) ? d.workerTransactions as WorkerTransaction[] : []);
     if (d.settings && typeof d.settings === 'object') {
       setSettings((prev) => ({ ...prev, ...(d.settings as Partial<AppSettings>) }));
     }
@@ -295,15 +384,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setRecords([]);
     setParties([]);
     setQualities([]);
+    setWorkers([]);
+    setWorkerTransactions([]);
     setSyncState(DEFAULT_SYNC_STATE);
     showToast('Local data cleared', 'success');
   }, [showToast]);
 
   const value: AppContextValue = {
-    records, parties, qualities, settings, syncState, toasts,
+    records, parties, qualities, workers, workerTransactions, settings, syncState, toasts,
     addRecord, updateRecord, deleteRecord,
     addParty, updateParty, deleteParty,
     addQuality, updateQuality, deleteQuality,
+    addWorker, updateWorker, deleteWorker,
+    addWorkerTransaction, updateWorkerTransaction, deleteWorkerTransaction,
     updateSettings, showToast, dismissToast,
     doSync, exportBackup, importBackup, clearLocalData,
   };
