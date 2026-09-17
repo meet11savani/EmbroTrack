@@ -2,10 +2,10 @@ import { useState, useEffect, useRef } from 'react';
 import { AppProvider, useApp } from '@/context/AppContext';
 import { Header } from '@/components/Header';
 import { ToastContainer } from '@/components/Toast';
-import { Records } from '@/features/records/Records';
-import { Parties } from '@/features/parties/Parties';
-import { Qualities } from '@/features/qualities/Qualities';
-import { Settings } from '@/features/settings/Settings';
+import { Records } from '@/pages/records/Records';
+import { Parties } from '@/pages/parties/Parties';
+import { Qualities } from '@/pages/qualities/Qualities';
+import { Settings } from '@/pages/settings/Settings';
 
 type Tab = 'records' | 'parties' | 'qualities' | 'settings';
 

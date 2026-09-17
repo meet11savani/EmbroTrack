@@ -1,9 +1,9 @@
 import { useState, useMemo } from 'react';
 import { Plus, Users } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
-import { PartyTable } from '@/features/parties/PartyTable';
-import { PartyForm } from '@/features/parties/PartyForm';
-import { PartyDetails } from '@/features/parties/PartyDetails';
+import { PartyTable } from '@/pages/parties/PartyTable';
+import { PartyForm } from '@/pages/parties/PartyForm';
+import { PartyDetails } from '@/pages/parties/PartyDetails';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { generateRecordPDF, generateBulkPDF } from '@/services/pdfService';
 import type { Party, EmbroideryRecord } from '@/types';

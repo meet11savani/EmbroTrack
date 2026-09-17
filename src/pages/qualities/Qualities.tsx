@@ -1,8 +1,8 @@
 import { useState, useMemo } from 'react';
 import { Plus, Sparkles } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
-import { QualityTable } from '@/features/qualities/QualityTable';
-import { QualityForm } from '@/features/qualities/QualityForm';
+import { QualityTable } from '@/pages/qualities/QualityTable';
+import { QualityForm } from '@/pages/qualities/QualityForm';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import type { Quality } from '@/types';
 

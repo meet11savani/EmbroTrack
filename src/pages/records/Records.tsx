@@ -1,10 +1,10 @@
 import { useState, useMemo, useRef, useCallback } from 'react';
 import { Plus, FileText, Printer, Download, Trash2, X } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
-import { RecordForm } from '@/features/records/RecordForm';
-import { RecordTable } from '@/features/records/RecordTable';
-import { RecordViewModal } from '@/features/records/RecordViewModal';
-import { PrintChallan } from '@/features/records/PrintChallan';
+import { RecordForm } from '@/pages/records/RecordForm';
+import { RecordTable } from '@/pages/records/RecordTable';
+import { RecordViewModal } from '@/pages/records/RecordViewModal';
+import { PrintChallan } from '@/pages/records/PrintChallan';
 import { SearchBar } from '@/components/SearchBar';
 import { FilterBar } from '@/components/FilterBar';
 import { Pagination } from '@/components/Pagination';

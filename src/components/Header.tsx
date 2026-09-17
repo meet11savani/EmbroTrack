@@ -15,7 +15,7 @@ const NAV_ITEMS = [
   { key: 'settings', label: 'Settings' },
 ];
 
-import { SyncStatus } from '../features/settings/SyncStatus';
+import { SyncStatus } from '../pages/settings/SyncStatus';
 
 export function Header({ businessName, businessSubtitle, activeTab, onNavigate }: HeaderProps) {
   return (
