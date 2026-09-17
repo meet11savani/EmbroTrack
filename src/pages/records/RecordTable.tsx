@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { Eye, Pencil, Download, Trash2, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import type { EmbroideryRecord, SortState } from '@/types';
-import { formatCurrency, formatNumber, formatDate } from '@/utils/formatters';
+import { formatNumber, formatDate } from '@/utils/formatters';
 
 interface RecordTableProps {
   records: EmbroideryRecord[];
@@ -15,12 +15,6 @@ interface RecordTableProps {
   onToggleSelect: (id: string) => void;
   onToggleSelectAll: () => void;
 }
-
-const STATUS_STYLES: Record<string, string> = {
-  Pending: 'bg-warning/10 text-warning',
-  'Partially Settled': 'bg-info/10 text-info',
-  Settled: 'bg-success/10 text-success',
-};
 
 interface ColumnDef {
   key: string;
@@ -36,11 +30,6 @@ const COLUMNS: ColumnDef[] = [
   { key: 'qualityName', label: 'Quality', sortable: true },
   { key: 'designNumber', label: 'D.No', sortable: false },
   { key: 'quantity', label: 'Quantity', sortable: true, className: 'text-right' },
-  { key: 'rate', label: 'Rate', sortable: true, className: 'text-right' },
-  { key: 'amount', label: 'Amount', sortable: true, className: 'text-right' },
-  { key: 'creditDate', label: 'Credit Date', sortable: false },
-  { key: 'debitDate', label: 'Debit Date', sortable: false },
-  { key: 'status', label: 'Status', sortable: true },
   { key: 'action', label: 'Actions', sortable: false },
 ];
 
@@ -124,15 +113,6 @@ export function RecordTable({
                 <td className="px-4 py-3 text-navy whitespace-nowrap max-w-[160px] truncate">{record.qualityName}</td>
                 <td className="px-4 py-3 text-navy-300 whitespace-nowrap">{record.designNumber || '—'}</td>
                 <td className="px-4 py-3 text-right text-navy font-medium whitespace-nowrap">{formatNumber(record.quantity)}</td>
-                <td className="px-4 py-3 text-right text-navy-300 whitespace-nowrap">{formatCurrency(record.rate)}</td>
-                <td className="px-4 py-3 text-right text-navy font-semibold whitespace-nowrap">{formatCurrency(record.amount)}</td>
-                <td className="px-4 py-3 text-navy-300 whitespace-nowrap">{formatDate(record.creditDate)}</td>
-                <td className="px-4 py-3 text-navy-300 whitespace-nowrap">{formatDate(record.debitDate)}</td>
-                <td className="px-4 py-3 whitespace-nowrap">
-                  <span className={`badge ${STATUS_STYLES[record.status] || 'bg-cream-200 text-navy-300'}`}>
-                    {record.status}
-                  </span>
-                </td>
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-1.5 whitespace-nowrap">
                     <button
