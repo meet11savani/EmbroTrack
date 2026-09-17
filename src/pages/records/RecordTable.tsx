@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { Eye, Pencil, Download, Trash2, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import type { EmbroideryRecord, SortState } from '@/types';
-import { formatNumber, formatDate } from '@/utils/formatters';
+import { formatCurrency, formatNumber, formatDate } from '@/utils/formatters';
 
 interface RecordTableProps {
   records: EmbroideryRecord[];
@@ -30,6 +30,7 @@ const COLUMNS: ColumnDef[] = [
   { key: 'qualityName', label: 'Quality', sortable: true },
   { key: 'designNumber', label: 'D.No', sortable: false },
   { key: 'quantity', label: 'Quantity', sortable: true, className: 'text-right' },
+  { key: 'amount', label: 'Amount', sortable: true, className: 'text-right' },
   { key: 'action', label: 'Actions', sortable: false },
 ];
 
@@ -113,6 +114,7 @@ export function RecordTable({
                 <td className="px-4 py-3 text-navy whitespace-nowrap max-w-[160px] truncate">{record.qualityName}</td>
                 <td className="px-4 py-3 text-navy-300 whitespace-nowrap">{record.designNumber || '—'}</td>
                 <td className="px-4 py-3 text-right text-navy font-medium whitespace-nowrap">{formatNumber(record.quantity)}</td>
+                <td className="px-4 py-3 text-right text-navy font-semibold whitespace-nowrap">{formatCurrency(record.amount)}</td>
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-1.5 whitespace-nowrap">
                     <button

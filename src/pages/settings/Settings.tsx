@@ -6,7 +6,7 @@ import { validateBackup } from '@/services/localStorage';
 import type { BackupData } from '@/types';
 
 export function Settings() {
-  const { settings, updateSettings, doSync, exportBackup, importBackup, clearLocalData, syncState, records, parties, qualities, showToast } = useApp();
+  const { settings, updateSettings, doSync, exportBackup, importBackup, clearLocalData, syncState, records, parties, qualities, workers, workerTransactions, showToast } = useApp();
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [showImportConfirm, setShowImportConfirm] = useState(false);
   const [pendingImport, setPendingImport] = useState<BackupData | null>(null);
@@ -57,7 +57,7 @@ export function Settings() {
           return;
         }
         setPendingImport(data);
-        setImportSummary(`${data.records.length} records, ${data.parties.length} parties, ${data.qualities.length} qualities`);
+        setImportSummary(`${data.records.length} records, ${data.parties.length} parties, ${data.qualities.length} qualities, ${data.workers?.length ?? 0} workers`);
         setShowImportConfirm(true);
       } catch {
         showToast('Failed to read backup file', 'error');
@@ -204,7 +204,7 @@ export function Settings() {
           <h3 className="text-lg font-bold text-navy">Data Management</h3>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-4">
           <div className="rounded-xl bg-cream-100 p-4 text-center">
             <p className="text-2xl font-bold text-navy">{records.filter((r) => !r.deleted).length}</p>
             <p className="text-xs text-navy-300 mt-1">Records</p>
@@ -216,6 +216,14 @@ export function Settings() {
           <div className="rounded-xl bg-cream-100 p-4 text-center">
             <p className="text-2xl font-bold text-navy">{qualities.filter((q) => !q.deleted).length}</p>
             <p className="text-xs text-navy-300 mt-1">Qualities</p>
+          </div>
+          <div className="rounded-xl bg-cream-100 p-4 text-center">
+            <p className="text-2xl font-bold text-navy">{workers.filter((w) => !w.deleted).length}</p>
+            <p className="text-xs text-navy-300 mt-1">Workers</p>
+          </div>
+          <div className="rounded-xl bg-cream-100 p-4 text-center">
+            <p className="text-2xl font-bold text-navy">{workerTransactions.filter((t) => !t.deleted).length}</p>
+            <p className="text-xs text-navy-300 mt-1">Worker Txns</p>
           </div>
         </div>
 
@@ -233,7 +241,7 @@ export function Settings() {
         </div>
 
         <p className="text-xs text-navy-300">
-          Export saves all records, parties, qualities, and settings as a JSON file. Importing will replace all current data.
+          Export saves all records, parties, qualities, workers, and settings as a JSON file. Importing will replace all current data.
           Clearing local data does not affect Google Sheets.
         </p>
       </div>
