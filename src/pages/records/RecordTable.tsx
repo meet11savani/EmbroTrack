@@ -76,7 +76,7 @@ export function RecordTable({
                     col.sortable ? 'cursor-pointer hover:bg-cream-200 transition-colors' : ''
                   } ${col.className || ''}`}
                 >
-                  <div className={`flex items-center gap-1.5 ${col.className || ''}`}>
+                  <div className={`flex items-center gap-1.5 ${col.className?.includes('text-right') ? 'justify-end' : ''}`}>
                     <span className="text-xs font-bold uppercase tracking-wide text-navy-300">{col.label}</span>
                     {col.sortable && getSortIcon(col.key)}
                   </div>

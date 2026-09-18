@@ -3,12 +3,12 @@ import { Plus, HardHat } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { WorkerTable } from '@/pages/workers/WorkerTable';
 import { WorkerForm } from '@/pages/workers/WorkerForm';
-import { WorkerDetails } from '@/pages/workers/WorkerDetails';
+import { WorkerViewModal } from '@/pages/workers/WorkerViewModal';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import type { Worker } from '@/types';
 
 export function Workers() {
-  const { workers, workerTransactions, deleteWorker, showToast } = useApp();
+  const { workers, workerTransactions, deleteWorker, deleteWorkerTransaction, addWorkerTransaction, showToast } = useApp();
   const [showForm, setShowForm] = useState(false);
   const [editingWorker, setEditingWorker] = useState<Worker | null>(null);
   const [viewingWorker, setViewingWorker] = useState<Worker | null>(null);
@@ -22,16 +22,6 @@ export function Workers() {
     showToast('Worker deleted', 'success');
     setDeletingWorker(null);
   };
-
-  if (viewingWorker) {
-    return (
-      <WorkerDetails
-        worker={viewingWorker}
-        transactions={workerTransactions}
-        onClose={() => setViewingWorker(null)}
-      />
-    );
-  }
 
   return (
     <div className="space-y-6">
@@ -81,6 +71,17 @@ export function Workers() {
           onSaved={() => showToast(editingWorker ? 'Worker updated' : 'Worker added', 'success')}
         />
       )}
+
+      <WorkerViewModal
+        worker={viewingWorker}
+        transactions={workerTransactions}
+        onClose={() => setViewingWorker(null)}
+        onEdit={() => { setEditingWorker(viewingWorker); setViewingWorker(null); setShowForm(true); }}
+        onDelete={() => { setDeletingWorker(viewingWorker); setViewingWorker(null); }}
+        onAddTransaction={addWorkerTransaction}
+        onDeleteTransaction={deleteWorkerTransaction}
+        showToast={showToast}
+      />
 
       <ConfirmDialog
         open={!!deletingWorker}

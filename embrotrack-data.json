@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "exportedAt": "2026-09-16T05:42:22.957Z",
+  "exportedAt": "2026-09-18T05:57:29.000Z",
   "records": [
     {
       "challanNumber": "MS-9",
@@ -8,7 +8,7 @@
       "partyName": "Shreeji Embroidery",
       "date": "2026-06-18",
       "qualityId": "mu3o6c9yxb2t9kf",
-      "qualityName": "df",
+      "qualityName": "Pearl Work",
       "designNumber": "242",
       "quantity": 380,
       "rate": 430,
@@ -19,7 +19,7 @@
       "amount": 163400,
       "status": "Settled",
       "createdAt": "2026-06-19T00:04:00.000Z",
-      "updatedAt": "2026-06-19T00:04:00.000Z",
+      "updatedAt": "2026-09-18T05:57:29.000Z",
       "syncStatus": "local"
     },
     {
@@ -65,7 +65,7 @@
     {
       "challanNumber": "MS-71",
       "partyId": "mu3o655edt66eio",
-      "partyName": "Meet",
+      "partyName": "Siddhi Vinayak Textiles",
       "date": "2026-06-19",
       "qualityId": "n9leaby4dji543p",
       "qualityName": "Resham Embroidery",
@@ -79,7 +79,7 @@
       "amount": 79420,
       "status": "Pending",
       "createdAt": "2026-06-20T03:52:00.000Z",
-      "updatedAt": "2026-06-20T03:52:00.000Z",
+      "updatedAt": "2026-09-18T05:57:29.000Z",
       "syncStatus": "local"
     },
     {
@@ -148,7 +148,7 @@
       "partyName": "Kishor Bhai Vora",
       "date": "2026-06-24",
       "qualityId": "mu3o6c9yxb2t9kf",
-      "qualityName": "df",
+      "qualityName": "Pearl Work",
       "designNumber": "242",
       "quantity": 350,
       "rate": 428,
@@ -159,7 +159,7 @@
       "amount": 149800,
       "status": "Settled",
       "createdAt": "2026-06-24T23:47:00.000Z",
-      "updatedAt": "2026-06-24T23:47:00.000Z",
+      "updatedAt": "2026-09-18T05:57:29.000Z",
       "syncStatus": "synced"
     },
     {
@@ -168,7 +168,7 @@
       "partyName": "Umiya Textiles",
       "date": "2026-06-25",
       "qualityId": "mu3o6c9yxb2t9kf",
-      "qualityName": "df",
+      "qualityName": "Pearl Work",
       "designNumber": "242",
       "quantity": 420,
       "rate": 462,
@@ -179,13 +179,13 @@
       "amount": 194040,
       "status": "Pending",
       "createdAt": "2026-06-25T22:59:00.000Z",
-      "updatedAt": "2026-06-25T22:59:00.000Z",
+      "updatedAt": "2026-09-18T05:57:29.000Z",
       "syncStatus": "synced"
     },
     {
       "challanNumber": "MS-27",
       "partyId": "mu3o655edt66eio",
-      "partyName": "Meet",
+      "partyName": "Siddhi Vinayak Textiles",
       "date": "2026-06-26",
       "qualityId": "3ts112yzw7yx6jk",
       "qualityName": "Gota Patti",
@@ -199,7 +199,7 @@
       "amount": 49500,
       "status": "Settled",
       "createdAt": "2026-06-27T05:38:00.000Z",
-      "updatedAt": "2026-06-27T05:38:00.000Z",
+      "updatedAt": "2026-09-18T05:57:29.000Z",
       "syncStatus": "local"
     },
     {
@@ -308,7 +308,7 @@
       "partyName": "Ratnam Textiles",
       "date": "2026-07-04",
       "qualityId": "mu3o6c9yxb2t9kf",
-      "qualityName": "df",
+      "qualityName": "Pearl Work",
       "designNumber": "242",
       "quantity": 400,
       "rate": 401,
@@ -319,7 +319,7 @@
       "amount": 160400,
       "status": "Settled",
       "createdAt": "2026-07-05T01:30:00.000Z",
-      "updatedAt": "2026-07-05T01:30:00.000Z",
+      "updatedAt": "2026-09-18T05:57:29.000Z",
       "syncStatus": "synced"
     },
     {
@@ -465,7 +465,7 @@
     {
       "challanNumber": "MS-31",
       "partyId": "mu3o655edt66eio",
-      "partyName": "Meet",
+      "partyName": "Siddhi Vinayak Textiles",
       "date": "2026-07-10",
       "qualityId": "n9leaby4dji543p",
       "qualityName": "Resham Embroidery",
@@ -479,7 +479,7 @@
       "amount": 42370,
       "status": "Settled",
       "createdAt": "2026-07-11T05:12:00.000Z",
-      "updatedAt": "2026-07-11T05:12:00.000Z",
+      "updatedAt": "2026-09-18T05:57:29.000Z",
       "syncStatus": "synced"
     },
     {
@@ -628,7 +628,7 @@
       "partyName": "Vraj Fashion Fabrics",
       "date": "2026-07-17",
       "qualityId": "mu3o6c9yxb2t9kf",
-      "qualityName": "df",
+      "qualityName": "Pearl Work",
       "designNumber": "242",
       "quantity": 300,
       "rate": 435,
@@ -639,7 +639,7 @@
       "amount": 130500,
       "status": "Settled",
       "createdAt": "2026-07-18T00:33:00.000Z",
-      "updatedAt": "2026-07-18T00:33:00.000Z",
+      "updatedAt": "2026-09-18T05:57:29.000Z",
       "syncStatus": "local"
     },
     {
@@ -748,7 +748,7 @@
       "partyName": "Kishor Bhai Vora",
       "date": "2026-07-26",
       "qualityId": "mu3o6c9yxb2t9kf",
-      "qualityName": "df",
+      "qualityName": "Pearl Work",
       "designNumber": "242",
       "quantity": 190,
       "rate": 396,
@@ -759,7 +759,7 @@
       "amount": 75240,
       "status": "Settled",
       "createdAt": "2026-07-27T05:35:00.000Z",
-      "updatedAt": "2026-07-27T05:35:00.000Z",
+      "updatedAt": "2026-09-18T05:57:29.000Z",
       "syncStatus": "local"
     },
     {
@@ -828,7 +828,7 @@
       "partyName": "Nikunj Prints",
       "date": "2026-07-29",
       "qualityId": "mu3o6c9yxb2t9kf",
-      "qualityName": "df",
+      "qualityName": "Pearl Work",
       "designNumber": "242",
       "quantity": 460,
       "rate": 390,
@@ -839,7 +839,7 @@
       "amount": 179400,
       "status": "Settled",
       "createdAt": "2026-07-30T00:34:00.000Z",
-      "updatedAt": "2026-07-30T00:34:00.000Z",
+      "updatedAt": "2026-09-18T05:57:29.000Z",
       "syncStatus": "local"
     },
     {
@@ -1088,7 +1088,7 @@
       "partyName": "Umiya Textiles",
       "date": "2026-08-14",
       "qualityId": "mu3o6c9yxb2t9kf",
-      "qualityName": "df",
+      "qualityName": "Pearl Work",
       "designNumber": "242",
       "quantity": 490,
       "rate": 438,
@@ -1099,7 +1099,7 @@
       "amount": 214620,
       "status": "Pending",
       "createdAt": "2026-08-15T00:06:00.000Z",
-      "updatedAt": "2026-08-15T00:06:00.000Z",
+      "updatedAt": "2026-09-18T05:57:29.000Z",
       "syncStatus": "local"
     },
     {
@@ -1179,7 +1179,7 @@
       "amount": 66010,
       "status": "Settled",
       "createdAt": "2026-08-20T06:30:00.000Z",
-      "updatedAt": "2026-08-20T06:30:00.000Z",
+      "updatedAt": "2026-09-17T10:15:36.001Z",
       "syncStatus": "local"
     },
     {
@@ -1248,7 +1248,7 @@
       "partyName": "Kishor Bhai Vora",
       "date": "2026-08-26",
       "qualityId": "mu3o6c9yxb2t9kf",
-      "qualityName": "df",
+      "qualityName": "Pearl Work",
       "designNumber": "242",
       "quantity": 40,
       "rate": 427,
@@ -1259,7 +1259,7 @@
       "amount": 17080,
       "status": "Settled",
       "createdAt": "2026-08-27T06:11:00.000Z",
-      "updatedAt": "2026-08-27T06:11:00.000Z",
+      "updatedAt": "2026-09-18T05:57:29.000Z",
       "syncStatus": "local"
     },
     {
@@ -1537,10 +1537,10 @@
       "notes": "",
       "id": "2mpjjhp9zbqacs4",
       "amount": 161200,
-      "status": "Pending",
+      "status": "Settled",
       "createdAt": "2026-09-13T20:30:00.000Z",
-      "updatedAt": "2026-09-13T20:30:00.000Z",
-      "syncStatus": "synced"
+      "updatedAt": "2026-09-17T10:15:44.396Z",
+      "syncStatus": "local"
     },
     {
       "challanNumber": "MS-65",
@@ -1626,15 +1626,14 @@
   ],
   "parties": [
     {
-      "name": "Meet",
-      "phone": "9874563210",
-      "address": "",
-      "notes": "afhwi",
+      "name": "Siddhi Vinayak Textiles",
+      "phone": "9825647310",
+      "address": "Punagam, Surat",
+      "notes": "New client",
       "id": "mu3o655edt66eio",
       "createdAt": "2026-09-16T05:37:56.114Z",
-      "updatedAt": "2026-09-16T05:42:17.521Z",
-      "syncStatus": "local",
-      "deleted": true
+      "updatedAt": "2026-09-18T05:57:29.000Z",
+      "syncStatus": "local"
     },
     {
       "name": "Shree Ganesh Textiles",
@@ -1829,16 +1828,15 @@
   ],
   "qualities": [
     {
-      "name": "df",
+      "name": "Pearl Work",
       "designNumber": "242",
       "defaultRate": 424,
       "unit": "Piece",
-      "notes": "4242",
+      "notes": "New pattern",
       "id": "mu3o6c9yxb2t9kf",
       "createdAt": "2026-09-16T05:38:05.350Z",
-      "updatedAt": "2026-09-16T05:41:59.933Z",
-      "syncStatus": "local",
-      "deleted": true
+      "updatedAt": "2026-09-18T05:57:29.000Z",
+      "syncStatus": "local"
     },
     {
       "name": "Zari Border Work",
@@ -1995,6 +1993,19 @@
       "syncStatus": "local"
     }
   ],
+  "workers": [
+    {
+      "name": "Kantu",
+      "phone": "9898123456",
+      "role": "Tailor",
+      "notes": "",
+      "id": "mu57uxuj53bd6bo",
+      "createdAt": "2026-09-17T07:36:51.931Z",
+      "updatedAt": "2026-09-18T05:57:29.000Z",
+      "syncStatus": "local"
+    }
+  ],
+  "workerTransactions": [],
   "settings": {
     "challanPrefix": "MS",
     "challanStartNumber": 1,

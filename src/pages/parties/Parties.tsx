@@ -1,11 +1,12 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { Plus, Users } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { PartyTable } from '@/pages/parties/PartyTable';
 import { PartyForm } from '@/pages/parties/PartyForm';
-import { PartyDetails } from '@/pages/parties/PartyDetails';
+import { PartyViewModal } from '@/pages/parties/PartyViewModal';
+import { SearchBar } from '@/components/SearchBar';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
-import { generateRecordPDF, generateBulkPDF } from '@/services/pdfService';
+import { generateRecordPDF } from '@/services/pdfService';
 import type { Party, EmbroideryRecord } from '@/types';
 
 export function Parties() {
@@ -14,8 +15,22 @@ export function Parties() {
   const [editingParty, setEditingParty] = useState<Party | null>(null);
   const [viewingParty, setViewingParty] = useState<Party | null>(null);
   const [deletingParty, setDeletingParty] = useState<Party | null>(null);
+  const [search, setSearch] = useState('');
+  const searchRef = useRef<HTMLInputElement>(null);
 
-  const activeParties = useMemo(() => parties.filter((p) => !p.deleted), [parties]);
+  const activeParties = useMemo(() => {
+    let result = parties.filter((p) => !p.deleted);
+    if (search) {
+      const q = search.toLowerCase();
+      result = result.filter(
+        (p) =>
+          p.name.toLowerCase().includes(q) ||
+          p.phone.toLowerCase().includes(q) ||
+          p.address.toLowerCase().includes(q)
+      );
+    }
+    return result;
+  }, [parties, search]);
 
   const handleDelete = () => {
     if (!deletingParty) return;
@@ -24,28 +39,10 @@ export function Parties() {
     setDeletingParty(null);
   };
 
-  const handlePrintRecord = (record: EmbroideryRecord) => {
-    generateRecordPDF(record, settings);
-    showToast('PDF downloaded', 'success');
-  };
-
   const handlePdfRecord = (record: EmbroideryRecord) => {
     generateRecordPDF(record, settings);
     showToast('PDF downloaded', 'success');
   };
-
-  if (viewingParty) {
-    return (
-      <PartyDetails
-        party={viewingParty}
-        records={records}
-        settings={settings}
-        onClose={() => setViewingParty(null)}
-        onPrintRecord={handlePrintRecord}
-        onPdfRecord={handlePdfRecord}
-      />
-    );
-  }
 
   return (
     <div className="space-y-6">
@@ -59,12 +56,15 @@ export function Parties() {
             <p className="text-sm text-navy-300">Manage your business parties</p>
           </div>
         </div>
-        <button
-          onClick={() => { setEditingParty(null); setShowForm(true); }}
-          className="btn-primary"
-        >
-          <Plus size={16} /> ADD PARTY
-        </button>
+        <div className="flex items-center gap-3 flex-wrap">
+          <SearchBar ref={searchRef} value={search} onChange={setSearch} placeholder="Search name, phone, address..." id="party-search" />
+          <button
+            onClick={() => { setEditingParty(null); setShowForm(true); }}
+            className="btn-primary"
+          >
+            <Plus size={16} /> ADD PARTY
+          </button>
+        </div>
       </div>
 
       {activeParties.length === 0 ? (
@@ -80,7 +80,7 @@ export function Parties() {
         </div>
       ) : (
         <PartyTable
-          parties={parties}
+          parties={activeParties}
           records={records}
           onView={(p) => setViewingParty(p)}
           onEdit={(p) => { setEditingParty(p); setShowForm(true); }}
@@ -95,6 +95,16 @@ export function Parties() {
           onSaved={() => showToast(editingParty ? 'Party updated' : 'Party added', 'success')}
         />
       )}
+
+      <PartyViewModal
+        party={viewingParty}
+        records={records}
+        settings={settings}
+        onClose={() => setViewingParty(null)}
+        onEdit={() => { setEditingParty(viewingParty); setViewingParty(null); setShowForm(true); }}
+        onDelete={() => { setDeletingParty(viewingParty); setViewingParty(null); }}
+        onViewRecord={handlePdfRecord}
+      />
 
       <ConfirmDialog
         open={!!deletingParty}

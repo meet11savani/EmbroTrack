@@ -1,6 +1,7 @@
 import { useState, useEffect, type FormEvent } from 'react';
-import { X, HardHat, Save } from 'lucide-react';
+import { X, HardHat, Save, Wallet, TrendingDown, HandCoins } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
+import { todayISO } from '@/utils/formatters';
 import type { Worker } from '@/types';
 
 export interface WorkerFormData {
@@ -8,6 +9,9 @@ export interface WorkerFormData {
   phone: string;
   role: string;
   notes: string;
+  salary: string;
+  withdrawal: string;
+  credit: string;
 }
 
 interface WorkerFormProps {
@@ -17,13 +21,16 @@ interface WorkerFormProps {
 }
 
 export function WorkerForm({ editingWorker, onClose, onSaved }: WorkerFormProps) {
-  const { addWorker, updateWorker, workers } = useApp();
+  const { addWorker, updateWorker, workers, workerTransactions, addWorkerTransaction, showToast } = useApp();
   const isEditing = !!editingWorker;
   const [formData, setFormData] = useState<WorkerFormData>({
     name: '',
     phone: '',
     role: '',
     notes: '',
+    salary: '',
+    withdrawal: '',
+    credit: '',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -34,6 +41,9 @@ export function WorkerForm({ editingWorker, onClose, onSaved }: WorkerFormProps)
         phone: editingWorker.phone,
         role: editingWorker.role,
         notes: editingWorker.notes,
+        salary: '',
+        withdrawal: '',
+        credit: '',
       });
     }
   }, [editingWorker]);
@@ -60,10 +70,26 @@ export function WorkerForm({ editingWorker, onClose, onSaved }: WorkerFormProps)
       errs.phone = 'Please enter a valid phone number';
     }
 
+    const salary = parseFloat(formData.salary);
+    if (formData.salary && (isNaN(salary) || salary < 0)) {
+      errs.salary = 'Salary must be a valid positive number';
+    }
+    const withdrawal = parseFloat(formData.withdrawal);
+    if (formData.withdrawal && (isNaN(withdrawal) || withdrawal < 0)) {
+      errs.withdrawal = 'Withdrawal must be a valid positive number';
+    }
+    const credit = parseFloat(formData.credit);
+    if (formData.credit && (isNaN(credit) || credit < 0)) {
+      errs.credit = 'Credit must be a valid positive number';
+    }
+
     if (Object.keys(errs).length > 0) {
       setErrors(errs);
       return;
     }
+
+    let workerId: string;
+    let workerName: string;
 
     if (isEditing && editingWorker) {
       updateWorker(editingWorker.id, {
@@ -72,14 +98,51 @@ export function WorkerForm({ editingWorker, onClose, onSaved }: WorkerFormProps)
         role: formData.role.trim(),
         notes: formData.notes.trim(),
       });
+      workerId = editingWorker.id;
+      workerName = formData.name.trim();
     } else {
-      addWorker({
+      const newWorker = addWorker({
         name: formData.name.trim(),
         phone: formData.phone.trim(),
         role: formData.role.trim(),
         notes: formData.notes.trim(),
       });
+      workerId = newWorker.id;
+      workerName = newWorker.name;
     }
+
+    const today = todayISO();
+    if (salary > 0) {
+      addWorkerTransaction({
+        workerId,
+        workerName,
+        type: 'salary',
+        date: today,
+        amount: salary,
+        description: 'Salary (from worker form)',
+      });
+    }
+    if (withdrawal > 0) {
+      addWorkerTransaction({
+        workerId,
+        workerName,
+        type: 'withdrawal',
+        date: today,
+        amount: withdrawal,
+        description: 'Withdrawal (from worker form)',
+      });
+    }
+    if (credit > 0) {
+      addWorkerTransaction({
+        workerId,
+        workerName,
+        type: 'credit',
+        date: today,
+        amount: credit,
+        description: 'Credit (from worker form)',
+      });
+    }
+
     onSaved?.();
     onClose();
   };
@@ -87,7 +150,7 @@ export function WorkerForm({ editingWorker, onClose, onSaved }: WorkerFormProps)
   return (
     <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 no-print">
       <div className="absolute inset-0 bg-navy/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="animate-scale-in relative card p-6 max-w-md w-full">
+      <div className="animate-scale-in relative card p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-teal flex items-center justify-center">
@@ -136,6 +199,66 @@ export function WorkerForm({ editingWorker, onClose, onSaved }: WorkerFormProps)
               placeholder="Embroidery Machine Operator"
             />
           </div>
+
+          {/* Salary / Withdrawal / Credit section */}
+          <div className="pt-2 border-t border-cream-200">
+            <p className="text-xs font-bold uppercase tracking-wide text-navy-300 mb-3">
+              {isEditing ? 'Add New Transactions' : 'Opening Balance'}
+            </p>
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <label className="label-field flex items-center gap-1">
+                  <Wallet size={12} /> Salary
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={formData.salary}
+                  onChange={(e) => setFormData({ ...formData, salary: e.target.value })}
+                  className={`input-field ${errors.salary ? 'border-danger' : ''}`}
+                  placeholder="0"
+                />
+                {errors.salary && <p className="mt-1 text-xs text-danger">{errors.salary}</p>}
+              </div>
+              <div>
+                <label className="label-field flex items-center gap-1">
+                  <TrendingDown size={12} /> Withdrawal
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={formData.withdrawal}
+                  onChange={(e) => setFormData({ ...formData, withdrawal: e.target.value })}
+                  className={`input-field ${errors.withdrawal ? 'border-danger' : ''}`}
+                  placeholder="0"
+                />
+                {errors.withdrawal && <p className="mt-1 text-xs text-danger">{errors.withdrawal}</p>}
+              </div>
+              <div>
+                <label className="label-field flex items-center gap-1">
+                  <HandCoins size={12} /> Credit
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={formData.credit}
+                  onChange={(e) => setFormData({ ...formData, credit: e.target.value })}
+                  className={`input-field ${errors.credit ? 'border-danger' : ''}`}
+                  placeholder="0"
+                />
+                {errors.credit && <p className="mt-1 text-xs text-danger">{errors.credit}</p>}
+              </div>
+            </div>
+            {isEditing && (
+              <p className="mt-2 text-xs text-navy-300">
+                These amounts will be added as new transactions for today. Existing transactions are not changed.
+              </p>
+            )}
+          </div>
+
           <div>
             <label className="label-field">Notes</label>
             <textarea

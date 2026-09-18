@@ -1,40 +1,35 @@
-import { useState, useEffect, useMemo, type FormEvent } from 'react';
-import { X, ArrowLeft, Plus, Trash2, Wallet, TrendingDown, HandCoins } from 'lucide-react';
-import type { Worker, WorkerTransaction, WorkerTransactionType } from '@/types';
+import { useState, useEffect, useMemo } from 'react';
+import { X, ArrowLeft, Plus, Trash2, Wallet, TrendingDown, HandCoins, Pencil, Eye } from 'lucide-react';
+import type { WorkerTransaction, WorkerTransactionType } from '@/types';
 import { formatCurrency, formatDate, todayISO } from '@/utils/formatters';
 import { useApp } from '@/context/AppContext';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { WorkerTransactionViewModal } from '@/pages/workers/WorkerTransactionViewModal';
+import { WorkerTransactionForm } from '@/pages/workers/WorkerTransactionForm';
 
 interface WorkerDetailsProps {
-  worker: Worker | null;
-  transactions: WorkerTransaction[];
+  workerId: string;
   onClose: () => void;
+  onEdit: () => void;
 }
 
-interface TxnFormData {
-  type: WorkerTransactionType;
-  date: string;
-  amount: string;
-  description: string;
-}
-
-const TYPE_CONFIG: Record<WorkerTransactionType, { label: string; icon: typeof Wallet; color: string; bg: string; text: string }> = {
-  salary: { label: 'Salary', icon: Wallet, color: 'text-navy', bg: 'bg-navy/10', text: 'text-navy' },
-  withdrawal: { label: 'Withdrawal', icon: TrendingDown, color: 'text-danger', bg: 'bg-danger/10', text: 'text-danger' },
-  credit: { label: 'Credit', icon: HandCoins, color: 'text-success', bg: 'bg-success/10', text: 'text-success' },
+const TYPE_CONFIG: Record<WorkerTransactionType, { label: string; icon: typeof Wallet; bg: string; text: string }> = {
+  salary: { label: 'Salary', icon: Wallet, bg: 'bg-navy/10', text: 'text-navy' },
+  withdrawal: { label: 'Withdrawal', icon: TrendingDown, bg: 'bg-danger/10', text: 'text-danger' },
+  credit: { label: 'Credit', icon: HandCoins, bg: 'bg-success/10', text: 'text-success' },
 };
 
-export function WorkerDetails({ worker, transactions, onClose }: WorkerDetailsProps) {
-  const { addWorkerTransaction, deleteWorkerTransaction, showToast } = useApp();
-  const [showForm, setShowForm] = useState(false);
+export function WorkerDetails({ workerId, onClose, onEdit }: WorkerDetailsProps) {
+  const { workers, workerTransactions, deleteWorkerTransaction, showToast } = useApp();
+  const [viewingTxn, setViewingTxn] = useState<WorkerTransaction | null>(null);
+  const [showTxnForm, setShowTxnForm] = useState(false);
+  const [editingTxn, setEditingTxn] = useState<WorkerTransaction | null>(null);
   const [deletingTxn, setDeletingTxn] = useState<WorkerTransaction | null>(null);
-  const [formData, setFormData] = useState<TxnFormData>({
-    type: 'salary',
-    date: todayISO(),
-    amount: '',
-    description: '',
-  });
-  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const worker = useMemo(
+    () => workers.find((w) => w.id === workerId && !w.deleted) ?? null,
+    [workers, workerId]
+  );
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -45,11 +40,10 @@ export function WorkerDetails({ worker, transactions, onClose }: WorkerDetailsPr
   }, [onClose]);
 
   const workerTxns = useMemo(() => {
-    if (!worker) return [];
-    return transactions
-      .filter((t) => t.workerId === worker.id && !t.deleted)
+    return workerTransactions
+      .filter((t) => t.workerId === workerId && !t.deleted)
       .sort((a, b) => b.date.localeCompare(a.date));
-  }, [worker, transactions]);
+  }, [workerTransactions, workerId]);
 
   const summary = useMemo(() => {
     let totalSalary = 0;
@@ -68,43 +62,33 @@ export function WorkerDetails({ worker, transactions, onClose }: WorkerDetailsPr
     };
   }, [workerTxns]);
 
-  if (!worker) return null;
-
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    const errs: Record<string, string> = {};
-    const amount = parseFloat(formData.amount);
-    if (!formData.amount || isNaN(amount)) {
-      errs.amount = 'Amount is required';
-    } else if (amount <= 0) {
-      errs.amount = 'Amount must be greater than 0';
-    }
-    if (!formData.date) {
-      errs.date = 'Date is required';
-    }
-    if (Object.keys(errs).length > 0) {
-      setErrors(errs);
-      return;
-    }
-    addWorkerTransaction({
-      workerId: worker.id,
-      workerName: worker.name,
-      type: formData.type,
-      date: formData.date,
-      amount,
-      description: formData.description.trim(),
-    });
-    showToast('Transaction added', 'success');
-    setFormData({ type: 'salary', date: todayISO(), amount: '', description: '' });
-    setErrors({});
-    setShowForm(false);
-  };
+  if (!worker) {
+    return (
+      <div className="fixed inset-0 z-[70] bg-cream flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-navy-300 mb-4">Worker not found</p>
+          <button onClick={onClose} className="btn-primary">Go Back</button>
+        </div>
+      </div>
+    );
+  }
 
   const handleDeleteTxn = () => {
     if (!deletingTxn) return;
     deleteWorkerTransaction(deletingTxn.id);
     showToast('Transaction deleted', 'success');
     setDeletingTxn(null);
+  };
+
+  const handleEditTxn = () => {
+    setEditingTxn(viewingTxn);
+    setViewingTxn(null);
+    setShowTxnForm(true);
+  };
+
+  const handleDeleteFromView = () => {
+    setDeletingTxn(viewingTxn);
+    setViewingTxn(null);
   };
 
   return (
@@ -120,9 +104,14 @@ export function WorkerDetails({ worker, transactions, onClose }: WorkerDetailsPr
             <p className="text-xs text-navy-200">{worker.role || 'Worker Details'}</p>
           </div>
         </div>
-        <button onClick={onClose} className="text-navy-200 hover:text-white transition-colors">
-          <X size={22} />
-        </button>
+        <div className="flex items-center gap-3">
+          <button onClick={onEdit} className="btn-secondary text-xs py-2">
+            <Pencil size={14} /> Edit Worker
+          </button>
+          <button onClick={onClose} className="text-navy-200 hover:text-white transition-colors">
+            <X size={22} />
+          </button>
+        </div>
       </div>
 
       <div className="max-w-5xl mx-auto p-6 lg:p-8 space-y-6">
@@ -169,82 +158,26 @@ export function WorkerDetails({ worker, transactions, onClose }: WorkerDetailsPr
         <div className="space-y-4">
           <div className="flex items-center justify-between flex-wrap gap-3">
             <h3 className="text-xl font-bold text-navy">Transaction History</h3>
-            <button onClick={() => setShowForm(true)} className="btn-primary">
+            <button
+              onClick={() => { setEditingTxn(null); setShowTxnForm(true); }}
+              className="btn-primary"
+            >
               <Plus size={16} /> ADD TRANSACTION
             </button>
           </div>
 
-          {showForm && (
-            <div className="card p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h4 className="text-base font-bold text-navy">New Transaction</h4>
-                <button onClick={() => { setShowForm(false); setErrors({}); }} className="text-navy-300 hover:text-navy">
-                  <X size={18} />
-                </button>
-              </div>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div>
-                    <label className="label-field">Type <span className="text-danger">*</span></label>
-                    <select
-                      value={formData.type}
-                      onChange={(e) => setFormData({ ...formData, type: e.target.value as WorkerTransactionType })}
-                      className="input-field"
-                    >
-                      <option value="salary">Salary</option>
-                      <option value="withdrawal">Withdrawal</option>
-                      <option value="credit">Credit</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="label-field">Date <span className="text-danger">*</span></label>
-                    <input
-                      type="date"
-                      value={formData.date}
-                      onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                      className={`input-field ${errors.date ? 'border-danger' : ''}`}
-                    />
-                    {errors.date && <p className="mt-1 text-xs text-danger">{errors.date}</p>}
-                  </div>
-                  <div>
-                    <label className="label-field">Amount <span className="text-danger">*</span></label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={formData.amount}
-                      onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                      className={`input-field ${errors.amount ? 'border-danger' : ''}`}
-                      placeholder="500"
-                    />
-                    {errors.amount && <p className="mt-1 text-xs text-danger">{errors.amount}</p>}
-                  </div>
-                </div>
-                <div>
-                  <label className="label-field">Description</label>
-                  <input
-                    type="text"
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    className="input-field"
-                    placeholder="Monthly salary, cash withdrawal, advance credit..."
-                  />
-                </div>
-                <div className="flex gap-3">
-                  <button type="button" onClick={() => { setShowForm(false); setErrors({}); }} className="btn-secondary">
-                    Cancel
-                  </button>
-                  <button type="submit" className="btn-primary">
-                    <Plus size={16} /> Add Transaction
-                  </button>
-                </div>
-              </form>
-            </div>
-          )}
-
           {workerTxns.length === 0 ? (
             <div className="card p-12 text-center">
+              <div className="w-14 h-14 rounded-2xl bg-cream-200 flex items-center justify-center mx-auto mb-3">
+                <Wallet size={24} className="text-navy-300" />
+              </div>
               <p className="text-navy-300">No transactions found for this worker.</p>
+              <button
+                onClick={() => { setEditingTxn(null); setShowTxnForm(true); }}
+                className="btn-primary mt-4"
+              >
+                <Plus size={16} /> ADD TRANSACTION
+              </button>
             </div>
           ) : (
             <div className="card overflow-hidden">
@@ -276,9 +209,10 @@ export function WorkerDetails({ worker, transactions, onClose }: WorkerDetailsPr
                       return (
                         <tr
                           key={txn.id}
-                          className={`border-b border-cream-200 hover:bg-cream-50 transition-colors ${
+                          className={`border-b border-cream-200 hover:bg-cream-50 transition-colors cursor-pointer ${
                             index % 2 === 1 ? 'bg-cream-50/50' : ''
                           }`}
+                          onClick={() => setViewingTxn(txn)}
                         >
                           <td className="px-4 py-3 whitespace-nowrap">
                             <span className={`badge ${config.bg} ${config.text}`}>
@@ -290,15 +224,33 @@ export function WorkerDetails({ worker, transactions, onClose }: WorkerDetailsPr
                             {formatCurrency(txn.amount)}
                           </td>
                           <td className="px-4 py-3 text-navy-300 max-w-[260px] truncate whitespace-nowrap">{txn.description || '—'}</td>
-                          <td className="px-4 py-3 whitespace-nowrap">
-                            <button
-                              onClick={() => setDeletingTxn(txn)}
-                              className="w-7 h-7 rounded-lg border border-danger/20 bg-danger/5 flex items-center justify-center text-danger transition-colors hover:bg-danger hover:text-white"
-                              title="Delete"
-                              aria-label="Delete"
-                            >
-                              <Trash2 size={14} />
-                            </button>
+                          <td className="px-4 py-3 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                            <div className="flex items-center gap-1.5 whitespace-nowrap">
+                              <button
+                                onClick={() => setViewingTxn(txn)}
+                                className="w-7 h-7 rounded-lg border border-cream-300 bg-white flex items-center justify-center text-navy transition-colors hover:bg-cream-100 hover:border-navy-200"
+                                title="View"
+                                aria-label="View"
+                              >
+                                <Eye size={14} />
+                              </button>
+                              <button
+                                onClick={() => { setEditingTxn(txn); setShowTxnForm(true); }}
+                                className="w-7 h-7 rounded-lg border border-cream-300 bg-white flex items-center justify-center text-navy transition-colors hover:bg-cream-100 hover:border-teal hover:text-teal"
+                                title="Edit"
+                                aria-label="Edit"
+                              >
+                                <Pencil size={14} />
+                              </button>
+                              <button
+                                onClick={() => setDeletingTxn(txn)}
+                                className="w-7 h-7 rounded-lg border border-danger/20 bg-danger/5 flex items-center justify-center text-danger transition-colors hover:bg-danger hover:text-white"
+                                title="Delete"
+                                aria-label="Delete"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       );
@@ -310,6 +262,26 @@ export function WorkerDetails({ worker, transactions, onClose }: WorkerDetailsPr
           )}
         </div>
       </div>
+
+      {/* Transaction view popup */}
+      <WorkerTransactionViewModal
+        transaction={viewingTxn}
+        workerName={worker.name}
+        onClose={() => setViewingTxn(null)}
+        onEdit={handleEditTxn}
+        onDelete={handleDeleteFromView}
+      />
+
+      {/* Transaction form */}
+      {showTxnForm && (
+        <WorkerTransactionForm
+          workerId={worker.id}
+          workerName={worker.name}
+          editingTxn={editingTxn}
+          onClose={() => { setShowTxnForm(false); setEditingTxn(null); }}
+          onSaved={() => showToast(editingTxn ? 'Transaction updated' : 'Transaction added', 'success')}
+        />
+      )}
 
       <ConfirmDialog
         open={!!deletingTxn}
