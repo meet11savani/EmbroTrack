@@ -1,11 +1,11 @@
 {
-  "name": "embroidery-record-management",
+  "name": "EmbroTrack",
   "private": true,
   "version": "1.0.0",
   "type": "module",
   "main": "electron/main.cjs",
   "description": "Embroidery Record Management - Windows desktop app",
-  "author": "Embroidery",
+  "author": "Meet Savani",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
