@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { X, Pencil, Trash2, Plus, Wallet, TrendingDown, HandCoins, Eye } from 'lucide-react';
+import { X, Plus, Wallet, TrendingDown, HandCoins, Eye } from 'lucide-react';
 import type { Worker, WorkerTransaction, WorkerTransactionType } from '@/types';
 import { formatCurrency, formatDate } from '@/utils/formatters';
 import { WorkerTransactionForm } from '@/pages/workers/WorkerTransactionForm';
@@ -24,7 +24,7 @@ const TYPE_CONFIG: Record<WorkerTransactionType, { label: string; icon: typeof W
 };
 
 export function WorkerViewModal({
-  worker, transactions, onClose, onEdit, onDelete, onAddTransaction, onDeleteTransaction, showToast,
+  worker, transactions, onClose, onDeleteTransaction, showToast,
 }: WorkerViewModalProps) {
   const [showTxnForm, setShowTxnForm] = useState(false);
   const [editingTxn, setEditingTxn] = useState<WorkerTransaction | null>(null);
@@ -174,19 +174,6 @@ export function WorkerViewModal({
                 })}
               </div>
             )}
-          </div>
-
-          {/* Footer */}
-          <div className="sticky bottom-0 bg-white border-t border-cream-300 px-6 py-4 flex items-center gap-3 rounded-b-3xl">
-            <button onClick={onDelete} className="btn-danger">
-              <Trash2 size={16} /> Delete
-            </button>
-            <button onClick={onEdit} className="btn-primary ml-auto">
-              <Pencil size={16} /> Edit
-            </button>
-            <button onClick={onClose} className="btn-secondary">
-              Close
-            </button>
           </div>
         </div>
       </div>

@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from 'react';
-import { X, Pencil, Trash2, Users, FileText } from 'lucide-react';
+import { X, Users, FileText } from 'lucide-react';
 import type { Party, EmbroideryRecord, AppSettings } from '@/types';
 import { calculatePartySummary } from '@/utils/calculations';
 import { formatCurrency, formatNumber, formatDate } from '@/utils/formatters';
@@ -15,7 +15,7 @@ interface PartyViewModalProps {
 }
 
 export function PartyViewModal({
-  party, records, settings, onClose, onEdit, onDelete, onViewRecord,
+  party, records, onClose, onViewRecord,
 }: PartyViewModalProps) {
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -140,19 +140,6 @@ export function PartyViewModal({
               ))}
             </div>
           )}
-        </div>
-
-        {/* Footer */}
-        <div className="sticky bottom-0 bg-white border-t border-cream-300 px-6 py-4 flex items-center gap-3 rounded-b-3xl">
-          <button onClick={onDelete} className="btn-danger">
-            <Trash2 size={16} /> Delete
-          </button>
-          <button onClick={onEdit} className="btn-primary ml-auto">
-            <Pencil size={16} /> Edit
-          </button>
-          <button onClick={onClose} className="btn-secondary">
-            Close
-          </button>
         </div>
       </div>
     </div>

@@ -1,8 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
-import { X, ArrowLeft, Printer, Download, Search } from 'lucide-react';
+import { X, ArrowLeft, Search } from 'lucide-react';
 import type { Party, EmbroideryRecord, AppSettings } from '@/types';
 import { calculatePartySummary } from '@/utils/calculations';
-import { formatCurrency, formatNumber, formatDate } from '@/utils/formatters';
+import { formatCurrency, formatNumber} from '@/utils/formatters';
 import { RecordTable } from '../records/RecordTable';
 import type { SortState } from '@/types';
 
@@ -16,7 +16,7 @@ interface PartyDetailsProps {
 }
 
 export function PartyDetails({
-  party, records, settings, onClose, onPrintRecord, onPdfRecord,
+  party, records, onClose, onPrintRecord, onPdfRecord,
 }: PartyDetailsProps) {
   const [search, setSearch] = useState('');
   const [dateFrom, setDateFrom] = useState('');
@@ -53,8 +53,8 @@ export function PartyDetails({
     const sorted = [...partyRecords];
     const { field, direction } = sortState;
     sorted.sort((a, b) => {
-      let aVal: string | number = (a as Record<string, unknown>)[field] as string | number;
-      let bVal: string | number = (b as Record<string, unknown>)[field] as string | number;
+      let aVal: string | number = (a as unknown as Record<string, unknown>)[field] as string | number;
+      let bVal: string | number = (b as unknown as Record<string, unknown>)[field] as string | number;
       if (typeof aVal === 'string') aVal = aVal.toLowerCase();
       if (typeof bVal === 'string') bVal = bVal.toLowerCase();
       if (aVal < bVal) return direction === 'asc' ? -1 : 1;

@@ -18,7 +18,7 @@ function createWindow() {
     width: 1200,
     height: 800,
     resizable: true,
-    title: 'Embroidery Record Management',
+    title: 'EmbroTrack',
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
       contextIsolation: true,

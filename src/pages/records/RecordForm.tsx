@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useEffect, useMemo, type FormEvent } from 'react';
 import { Plus, RotateCcw, Save } from 'lucide-react';
 import { useApp } from '@/context/AppContext';

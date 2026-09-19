@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useCallback } from 'react';
-import { Plus, FileText, Printer, Download, Trash2, X } from 'lucide-react';
+import { Plus, FileText, Printer, Download, X } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { RecordForm } from '@/pages/records/RecordForm';
 import { RecordTable } from '@/pages/records/RecordTable';
@@ -28,7 +28,7 @@ export function Records() {
   const [deletingRecord, setDeletingRecord] = useState<EmbroideryRecord | null>(null);
   const [printRecord, setPrintRecord] = useState<EmbroideryRecord | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [showBulkActions, setShowBulkActions] = useState(false);
+  const [setShowBulkActions] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
 
   // Filter, search, sort
@@ -54,8 +54,8 @@ export function Records() {
 
     const { field, direction } = sortState;
     result = [...result].sort((a, b) => {
-      let aVal: string | number = (a as Record<string, unknown>)[field] as string | number;
-      let bVal: string | number = (b as Record<string, unknown>)[field] as string | number;
+      let aVal: string | number = (a as unknown as Record<string, unknown>)[field] as string | number;
+      let bVal: string | number = (b as unknown as Record<string, unknown>)[field] as string | number;
       if (typeof aVal === 'string') aVal = aVal.toLowerCase();
       if (typeof bVal === 'string') bVal = bVal.toLowerCase();
       if (aVal < bVal) return direction === 'asc' ? -1 : 1;

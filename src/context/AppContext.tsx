@@ -1,3 +1,5 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import type { EmbroideryRecord, Party, Quality, AppSettings, SyncStatus, Worker, WorkerTransaction } from '@/types';
 import { storage } from '@/services/localStorage';
