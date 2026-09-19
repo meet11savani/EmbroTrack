@@ -10,7 +10,11 @@ node_modules
 dist
 dist-ssr
 *.local
-cmd
+
+# my files
+*.env.local
+*.local.env
+google-apps-script
 
 .vscode/*
 !.vscode/extensions.json

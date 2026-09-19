@@ -14,6 +14,11 @@ import type { EmbroideryRecord, FilterState, SortState } from '@/types';
 import { formatCurrency, formatNumber } from '@/utils/formatters';
 import { calculateGrandTotal } from '@/utils/calculations';
 
+interface RecordFormState {
+  show: boolean;
+  editing: EmbroideryRecord | null;
+}
+
 export function Records() {
   const { records, parties, qualities, settings, deleteRecord, showToast } = useApp();
   const [search, setSearch] = useState('');
@@ -23,12 +28,11 @@ export function Records() {
   const [sortState, setSortState] = useState<SortState>({ field: 'date', direction: 'desc' });
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
-  const [editingRecord, setEditingRecord] = useState<EmbroideryRecord | null>(null);
+  const [recordForm, setRecordForm] = useState<RecordFormState>({ show: false, editing: null });
   const [viewingRecord, setViewingRecord] = useState<EmbroideryRecord | null>(null);
   const [deletingRecord, setDeletingRecord] = useState<EmbroideryRecord | null>(null);
   const [printRecord, setPrintRecord] = useState<EmbroideryRecord | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [setShowBulkActions] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
 
   // Filter, search, sort
@@ -134,7 +138,6 @@ export function Records() {
 
   const handleBulkPrint = () => {
     setPrintRecord(null);
-    setShowBulkActions(false);
     const printArea = document.querySelector('.print-area');
     if (printArea) printArea.innerHTML = '';
     selectedRecords.forEach((r) => {
@@ -152,17 +155,10 @@ export function Records() {
   const handleBulkPdf = () => {
     generateBulkPDF(selectedRecords, settings, parties);
     showToast(`PDF downloaded for ${selectedRecords.length} records`, 'success');
-    setShowBulkActions(false);
   };
 
   return (
     <div className="space-y-6">
-      {/* Add/Edit Record Form */}
-      <RecordForm
-        editingRecord={editingRecord}
-        onUpdateComplete={() => setEditingRecord(null)}
-      />
-
       {/* Records section */}
       <div className="space-y-4">
         <div className="flex items-center justify-between flex-wrap gap-4">
@@ -177,6 +173,12 @@ export function Records() {
           <div className="flex items-center gap-3 flex-wrap">
             <SearchBar ref={searchRef} value={search} onChange={(v) => { setSearch(v); setCurrentPage(1); }} placeholder="Search challan, party, quality..." id="global-search" />
             <FilterBar filters={filters} onApply={(f) => { setFilters(f); setCurrentPage(1); }} parties={parties} qualities={qualities} />
+            <button
+              onClick={() => setRecordForm({ show: true, editing: null })}
+              className="btn-primary"
+            >
+              <Plus size={16} /> ADD RECORD
+            </button>
           </div>
         </div>
 
@@ -217,7 +219,7 @@ export function Records() {
             </div>
             <h3 className="text-lg font-bold text-navy">No records yet</h3>
             <p className="mt-1 text-sm text-navy-300">Create your first embroidery record to get started.</p>
-            <button onClick={() => document.getElementById('challanNo')?.focus()} className="btn-primary mt-5">
+            <button onClick={() => setRecordForm({ show: true, editing: null })} className="btn-primary mt-5">
               <Plus size={16} /> ADD RECORD
             </button>
           </div>
@@ -228,7 +230,7 @@ export function Records() {
               sortState={sortState}
               onSort={handleSort}
               onView={(r) => setViewingRecord(r)}
-              onEdit={(r) => { setEditingRecord(r); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+              onEdit={(r) => setRecordForm({ show: true, editing: r })}
               onPdf={handlePdf}
               onDelete={(r) => setDeletingRecord(r)}
               selectedIds={selectedIds}
@@ -256,7 +258,7 @@ export function Records() {
         onClose={() => setViewingRecord(null)}
         onPrint={() => { if (viewingRecord) handlePrint(viewingRecord); }}
         onPdf={() => { if (viewingRecord) handlePdf(viewingRecord); }}
-        onEdit={() => { if (viewingRecord) { setEditingRecord(viewingRecord); setViewingRecord(null); window.scrollTo({ top: 0, behavior: 'smooth' }); } }}
+        onEdit={() => { if (viewingRecord) { setRecordForm({ show: true, editing: viewingRecord }); setViewingRecord(null); } }}
       />
 
       <ConfirmDialog
@@ -269,6 +271,14 @@ export function Records() {
       />
 
       {printRecord && <PrintChallan record={printRecord} settings={settings} />}
+
+      {recordForm.show && (
+        <RecordForm
+          editingRecord={recordForm.editing}
+          onClose={() => setRecordForm({ show: false, editing: null })}
+          onSaved={() => setRecordForm({ show: false, editing: null })}
+        />
+      )}
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { useState, useRef, type FormEvent } from 'react';
 import { Settings as SettingsIcon, RefreshCw, Download, Upload, Trash2, Link2, Hash, Save, Database } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
+import { UserManagement } from '@/pages/settings/UserManagement';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { validateBackup } from '@/services/localStorage';
 import type { BackupData } from '@/types';
@@ -95,6 +96,9 @@ export function Settings() {
           <p className="text-sm text-navy-300">Configure your application</p>
         </div>
       </div>
+
+      {/* User Management (admin only) */}
+      <UserManagement />
 
       {/* Business & Challan Settings */}
       <form onSubmit={handleSaveSettings} className="card p-6 lg:p-8 space-y-6">
