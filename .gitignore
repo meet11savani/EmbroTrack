@@ -13,8 +13,8 @@ dist-ssr
 
 # my files
 *.env.local
-*.local.env
 google-apps-script
+release
 
 .vscode/*
 !.vscode/extensions.json

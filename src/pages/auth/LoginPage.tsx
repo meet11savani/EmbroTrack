@@ -1,5 +1,6 @@
+import logo from '../../assets/logo.png';
 import { useState, type FormEvent } from 'react';
-import { HardHat, Lock, User, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Lock, User, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
 const ADMIN_CREDENTIALS = {
@@ -53,7 +54,7 @@ export function LoginPage() {
           {/* Logo */}
           <div className="text-center mb-8">
             <div className="w-16 h-16 rounded-2xl bg-navy flex items-center justify-center mx-auto mb-4">
-              <HardHat size={28} className="text-cream-100" />
+              <img src={logo} alt="Logo" className="w-12 h-12 rounded-lg" />
             </div>
             <h1 className="text-2xl font-bold text-navy">EmbroTrack</h1>
             <p className="mt-1 text-sm text-navy-300">Embroidery Record Management</p>

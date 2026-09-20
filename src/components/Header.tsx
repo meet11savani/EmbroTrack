@@ -1,4 +1,4 @@
-import logo from '../assets/favicon.png';
+import logo from '../assets/logo.png';
 import { LogOut, ShieldCheck, User as UserIcon } from 'lucide-react';
 import { SyncStatus } from '../pages/settings/SyncStatus';
 
