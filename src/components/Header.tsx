@@ -1,6 +1,7 @@
 import logo from '../assets/logo.png';
-import { LogOut, ShieldCheck, User as UserIcon } from 'lucide-react';
+import { LogOut, ShieldCheck, User as UserIcon, Clock } from 'lucide-react';
 import { SyncStatus } from '../pages/settings/SyncStatus';
+import { useAuth } from '@/context/AuthContext';
 
 interface NavItem {
   key: string;
@@ -28,6 +29,8 @@ export function Header({
   onLogout,
 }: HeaderProps) {
   const isAdmin = userRole === 'admin';
+  const { user, demoDaysLeft } = useAuth();
+  const isDemo = user?.isDemo;
 
   return (
     <header className="sticky top-0 z-40 bg-white border-b border-cream-300 no-print">
@@ -100,6 +103,26 @@ export function Header({
             </button>
           ))}
         </nav>
+
+        {/* Demo expiry banner */}
+        {isDemo && demoDaysLeft !== null && (
+          <div className="pb-3">
+            <div className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-medium ${
+              demoDaysLeft <= 1
+                ? 'bg-danger/10 border border-danger/20 text-danger'
+                : 'bg-gold/10 border border-gold/20 text-gold'
+            }`}>
+              <Clock size={14} className="shrink-0" />
+              <span>
+                Demo account — {demoDaysLeft === 0
+                  ? 'expires today'
+                  : demoDaysLeft === 1
+                    ? '1 day remaining'
+                    : `${demoDaysLeft} days remaining`}
+              </span>
+            </div>
+          </div>
+        )}
       </div>
     </header>
   );

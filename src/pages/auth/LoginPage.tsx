@@ -1,11 +1,16 @@
 import logo from '../../assets/logo.png';
 import { useState, type FormEvent } from 'react';
-import { Lock, User, Eye, EyeOff, Loader2 } from 'lucide-react';
-import { useAuth } from '@/context/AuthContext';
+import { Lock, User, Eye, EyeOff, Loader2, Clock, AlertTriangle } from 'lucide-react';
+import { useAuth, isDemoAccountExpired } from '@/context/AuthContext';
 
 const ADMIN_CREDENTIALS = {
   username: 'admin',
   password: 'admin123',
+};
+
+const DEMO_CREDENTIALS = {
+  username: 'demo',
+  password: 'demo123',
 };
 
 export function LoginPage() {
@@ -16,19 +21,29 @@ export function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const demoExpired = isDemoAccountExpired();
+
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
     setTimeout(() => {
-      // Check admin first
       if (username.trim() === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
         login({ username: 'admin', role: 'admin', name: 'Administrator' });
         return;
       }
 
-      // Check managed users
+      if (username.trim().toLowerCase() === DEMO_CREDENTIALS.username && password === DEMO_CREDENTIALS.password) {
+        if (demoExpired) {
+          setError('The demo account has expired. Please contact the administrator for access.');
+          setLoading(false);
+          return;
+        }
+        login({ username: 'demo', role: 'user', name: 'Demo User', isDemo: true });
+        return;
+      }
+
       const found = users.find(
         (u) => u.username.toLowerCase() === username.trim().toLowerCase() && u.password === password
       );
@@ -116,12 +131,29 @@ export function LoginPage() {
             </button>
           </form>
 
-          <div className="mt-6 pt-6 border-t border-cream-200">
+          <div className="mt-6 pt-6 border-t border-cream-200 space-y-3">
             <div className="rounded-xl bg-cream-100 px-4 py-3 text-center">
               <p className="text-xs text-navy-300">
                 <span className="font-semibold text-navy">Admin login:</span> admin / admin123
               </p>
             </div>
+
+            {demoExpired ? (
+              <div className="rounded-xl bg-danger/10 border border-danger/20 px-4 py-3 flex items-center gap-2">
+                <AlertTriangle size={16} className="text-danger shrink-0" />
+                <p className="text-xs font-medium text-danger">
+                  Demo account has expired and can no longer be used.
+                </p>
+              </div>
+            ) : (
+              <div className="rounded-xl bg-teal/8 border border-teal/20 px-4 py-3 flex items-center gap-2">
+                <Clock size={16} className="text-teal shrink-0" />
+                <p className="text-xs text-navy-300">
+                  <span className="font-semibold text-teal">Demo login:</span> demo / demo123
+                  <span className="text-navy-300"> — valid for 3 days only</span>
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
