@@ -41,86 +41,83 @@ export interface CreateUserPayload {
   email: string;
 }
 
-async function postJSON(url: string, body: Record<string, unknown>): Promise<Record<string, unknown>> {
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify(body),
-  });
-  if (!response.ok) throw new Error(`Request failed: ${response.status}`);
-  const text = await response.text();
-  return JSON.parse(text) as Record<string, unknown>;
-}
-
 /**
  * Calls the Google Apps Script Web App.
- * Uses no-cors fetch with text/plain to avoid preflight — response is opaque,
- * so this is a best-effort fire-and-forget push. Full sync uses a normal POST
- * with the Apps Script JSON response.
+ *
+ * Apps Script Web Apps respond via a redirect to a script.googleusercontent.com
+ * URL that frequently lacks the CORS headers a browser fetch() expects, which
+ * makes calls fail with "TypeError: Failed to fetch" from the renderer —
+ * even when the URL, deployment, and network are all fine.
+ *
+ * When running inside Electron, this routes the request through the main
+ * process (plain Node, via IPC) instead, where CORS doesn't apply at all.
+ * Falls back to a normal browser fetch when window.api isn't available
+ * (e.g. running the app as a plain web page during `vite dev`).
  */
-export const googleSheets = {
-  async syncAll(
-    url: string,
-    payload: SyncPayload,
-    signal?: AbortSignal
-  ): Promise<SyncResponse> {
-    if (!url) throw new Error('Google Apps Script URL is not configured');
+async function callScript(
+  url: string,
+  method: 'GET' | 'POST',
+  body?: Record<string, unknown>
+): Promise<Record<string, unknown>> {
+  if (!url) throw new Error('Google Apps Script URL is not configured');
 
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ operation: 'sync', ...payload }),
-      signal,
-    });
-
-    if (!response.ok) {
-      throw new Error(`Sync failed: ${response.status}`);
-    }
-
-    const text = await response.text();
+  if (typeof window !== 'undefined' && window.api?.googleScriptRequest) {
+    const result = await window.api.googleScriptRequest({ url, method, body });
+    if (result.error) throw new Error(result.error);
+    if (!result.ok) throw new Error(`Request failed: ${result.status}`);
     try {
-      return JSON.parse(text) as SyncResponse;
+      return JSON.parse(result.text) as Record<string, unknown>;
     } catch {
       return { success: true };
     }
+  }
+
+  const response =
+    method === 'GET'
+      ? await fetch(url)
+      : await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(body),
+        });
+
+  if (!response.ok) throw new Error(`Request failed: ${response.status}`);
+  const text = await response.text();
+  try {
+    return JSON.parse(text) as Record<string, unknown>;
+  } catch {
+    return { success: true };
+  }
+}
+
+export const googleSheets = {
+  async syncAll(url: string, payload: SyncPayload): Promise<SyncResponse> {
+    const result = await callScript(url, 'POST', { operation: 'sync', ...payload });
+    return result as unknown as SyncResponse;
   },
 
-  async pullAll(url: string, signal?: AbortSignal): Promise<SyncResponse> {
-    if (!url) throw new Error('Google Apps Script URL is not configured');
-
-    const response = await fetch(`${url}?operation=getAll`, {
-      method: 'GET',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      signal,
-    });
-
-    if (!response.ok) throw new Error(`Pull failed: ${response.status}`);
-
-    const text = await response.text();
-    return JSON.parse(text) as SyncResponse;
+  async pullAll(url: string): Promise<SyncResponse> {
+    const result = await callScript(`${url}?operation=getAll`, 'GET');
+    return result as unknown as SyncResponse;
   },
 
   async login(url: string, username: string, password: string): Promise<LoginResponse> {
-    if (!url) throw new Error('Google Apps Script URL is not configured');
-    const result = await postJSON(url, { operation: 'login', username, password });
+    const result = await callScript(url, 'POST', { operation: 'login', username, password });
     return result as unknown as LoginResponse;
   },
 
   async getUsers(url: string, token: string): Promise<{ success: boolean; users?: RemoteUser[]; error?: string }> {
-    if (!url) throw new Error('Google Apps Script URL is not configured');
-    const result = await postJSON(url, { operation: 'getUsers', token });
+    const result = await callScript(url, 'POST', { operation: 'getUsers', token });
     return result as unknown as { success: boolean; users?: RemoteUser[]; error?: string };
   },
 
   async createUser(url: string, token: string, payload: CreateUserPayload): Promise<{ success: boolean; error?: string }> {
-    if (!url) throw new Error('Google Apps Script URL is not configured');
-    const result = await postJSON(url, { operation: 'createUser', token, ...payload });
+    const result = await callScript(url, 'POST', { operation: 'createUser', token, ...payload });
     return result as unknown as { success: boolean; error?: string };
   },
 
   async deleteUser(url: string, token: string, username: string): Promise<{ success: boolean; error?: string }> {
-    if (!url) throw new Error('Google Apps Script URL is not configured');
-    const result = await postJSON(url, { operation: 'deleteUser', token, username });
+    const result = await callScript(url, 'POST', { operation: 'deleteUser', token, username });
     return result as unknown as { success: boolean; error?: string };
   },
 };

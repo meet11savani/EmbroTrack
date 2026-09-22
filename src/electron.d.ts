@@ -10,6 +10,11 @@ export interface ElectronApi {
   addOrder(data: Record<string, unknown>): Promise<ApiOrder>;
   updateOrder(id: string, data: Record<string, unknown>): Promise<ApiOrder | { error: string }>;
   deleteOrder(id: string): Promise<{ success: boolean; id: string }>;
+  googleScriptRequest(payload: {
+    url: string;
+    method?: 'GET' | 'POST';
+    body?: Record<string, unknown>;
+  }): Promise<{ ok: boolean; status: number; text: string; error?: string }>;
 }
 
 declare global {

@@ -75,6 +75,32 @@ ipcMain.handle('deleteOrder', (_event, id) => {
   return { success: true, id };
 });
 
+// ---- IPC: Google Apps Script proxy (avoids renderer-side CORS issues) ----
+// Apps Script Web Apps respond via a redirect to script.googleusercontent.com
+// that often lacks proper CORS headers, which makes the renderer's fetch()
+// throw "Failed to fetch" even when the URL and deployment are correct.
+// Running the request here, in the main process, sidesteps CORS entirely.
+
+ipcMain.handle('googleScriptRequest', async (_event, { url, method = 'GET', body }) => {
+  try {
+    const response = await fetch(url, {
+      method,
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: body ? JSON.stringify(body) : undefined,
+      redirect: 'follow',
+    });
+    const text = await response.text();
+    return { ok: response.ok, status: response.status, text };
+  } catch (err) {
+    return {
+      ok: false,
+      status: 0,
+      text: '',
+      error: err instanceof Error ? err.message : String(err),
+    };
+  }
+});
+
 // ---- App lifecycle ----
 
 app.whenReady().then(createWindow);
