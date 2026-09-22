@@ -1,5 +1,6 @@
-/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
+import { googleSheets, type RemoteUser } from '@/services/googleSheets';
+import { storage } from '@/services/localStorage';
 
 export type UserRole = 'admin' | 'user';
 
@@ -8,6 +9,7 @@ export interface AuthUser {
   role: UserRole;
   name: string;
   isDemo?: boolean;
+  token?: string;
 }
 
 export interface ManagedUser {
@@ -28,8 +30,10 @@ interface AuthContextValue {
   users: ManagedUser[];
   login: (user: AuthUser) => void;
   logout: () => void;
-  addUser: (data: Omit<ManagedUser, 'id' | 'createdAt'>) => { success: boolean; error?: string };
-  deleteUser: (id: string) => void;
+  authenticate: (username: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  refreshUsers: () => Promise<void>;
+  addUser: (data: Omit<ManagedUser, 'id' | 'createdAt'>) => Promise<{ success: boolean; error?: string }>;
+  deleteUser: (id: string) => Promise<void>;
   isDemoExpired: boolean;
   demoDaysLeft: number | null;
 }
@@ -60,6 +64,19 @@ function loadUsers(): ManagedUser[] {
 
 function genId(): string {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+}
+
+function remoteToLocal(ru: RemoteUser): ManagedUser {
+  return {
+    id: ru.username,
+    username: ru.username,
+    password: '',
+    name: ru.name,
+    phone: ru.phone,
+    email: ru.email,
+    role: ru.role,
+    createdAt: ru.createdAt,
+  };
 }
 
 export function isDemoAccountExpired(): boolean {
@@ -137,6 +154,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => clearInterval(interval);
   }, [user]);
 
+  const getBackendUrl = useCallback((): string => {
+    return storage.getSettings().googleScriptUrl;
+  }, []);
+
   const login = useCallback((u: AuthUser) => {
     if (u.isDemo) {
       if (!localStorage.getItem(DEMO_FIRST_LOGIN_KEY)) {
@@ -149,7 +170,61 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(() => setUser(null), []);
 
-  const addUser = useCallback((data: Omit<ManagedUser, 'id' | 'createdAt'>): { success: boolean; error?: string } => {
+  const authenticate = useCallback(async (username: string, password: string): Promise<{ success: boolean; error?: string }> => {
+    const url = getBackendUrl();
+
+    if (url) {
+      try {
+        const result = await googleSheets.login(url, username, password);
+        if (result.success && result.user) {
+          login({ ...result.user, token: result.token });
+          return { success: true };
+        }
+        return { success: false, error: result.error ?? 'Invalid username or password' };
+      } catch {
+        return { success: false, error: 'Could not reach the server. Check your connection and try again.' };
+      }
+    }
+
+    return { success: false, error: 'No backend URL configured. Contact your administrator.' };
+  }, [getBackendUrl, login]);
+
+  const refreshUsers = useCallback(async () => {
+    const url = getBackendUrl();
+    if (!url || !user?.token || !isAdmin) return;
+    try {
+      const result = await googleSheets.getUsers(url, user.token);
+      if (result.success && result.users) {
+        setUsers(result.users.map(remoteToLocal));
+      }
+    } catch {
+      // keep local cache on failure
+    }
+  }, [getBackendUrl, user]);
+
+  const addUser = useCallback(async (data: Omit<ManagedUser, 'id' | 'createdAt'>): Promise<{ success: boolean; error?: string }> => {
+    const url = getBackendUrl();
+    if (url && user?.token) {
+      try {
+        const result = await googleSheets.createUser(url, user.token, {
+          username: data.username.trim(),
+          password: data.password,
+          role: data.role,
+          name: data.name.trim(),
+          phone: data.phone,
+          email: data.email,
+        });
+        if (!result.success) {
+          return { success: false, error: result.error ?? 'Failed to create user' };
+        }
+        await refreshUsers();
+        return { success: true };
+      } catch {
+        return { success: false, error: 'Could not reach the server. Check your connection and try again.' };
+      }
+    }
+
+    // Offline fallback — local only (works only on this device)
     const exists = users.some((u) => u.username.toLowerCase() === data.username.trim().toLowerCase());
     if (exists) return { success: false, error: 'Username already exists' };
 
@@ -162,19 +237,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
     setUsers((prev) => [...prev, newUser]);
     return { success: true };
-  }, [users]);
+  }, [getBackendUrl, user, users, refreshUsers]);
 
-  const deleteUser = useCallback((id: string) => {
+  const deleteUser = useCallback(async (id: string): Promise<void> => {
+    const found = users.find((u) => u.id === id);
+    if (!found) return;
+
+    const url = getBackendUrl();
+    if (url && user?.token) {
+      try {
+        await googleSheets.deleteUser(url, user.token, found.username);
+      } catch {
+        // fall through to local delete
+      }
+    }
+
     setUsers((prev) => prev.filter((u) => u.id !== id));
-  }, []);
+  }, [getBackendUrl, user, users]);
+
+  const isAdmin = user?.role === 'admin';
 
   const value: AuthContextValue = {
     user,
     isAuthenticated: !!user,
-    isAdmin: user?.role === 'admin',
+    isAdmin,
     users,
     login,
     logout,
+    authenticate,
+    refreshUsers,
     addUser,
     deleteUser,
     isDemoExpired: demoExpired,

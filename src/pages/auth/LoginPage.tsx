@@ -4,17 +4,17 @@ import { Lock, User, Eye, EyeOff, Loader2, Clock, AlertTriangle } from 'lucide-r
 import { useAuth, isDemoAccountExpired } from '@/context/AuthContext';
 
 const ADMIN_CREDENTIALS = {
-  username: 'admin',
-  password: 'admin123',
+  username: 'adminmeetsavani',
+  password: 'admin@meet2004@',
 };
 
 const DEMO_CREDENTIALS = {
-  username: 'demo',
-  password: 'demo123',
+  username: 'meetsavani',
+  password: '123456',
 };
 
 export function LoginPage() {
-  const { login, users } = useAuth();
+  const { login, authenticate } = useAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -23,38 +23,31 @@ export function LoginPage() {
 
   const demoExpired = isDemoAccountExpired();
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
-    setTimeout(() => {
-      if (username.trim() === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
-        login({ username: 'admin', role: 'admin', name: 'Administrator' });
+    if (username.trim() === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
+      login({ username: 'admin', role: 'admin', name: 'Administrator' });
+      return;
+    }
+
+    if (username.trim().toLowerCase() === DEMO_CREDENTIALS.username && password === DEMO_CREDENTIALS.password) {
+      if (demoExpired) {
+        setError('The demo account has expired. Please contact the administrator for access.');
+        setLoading(false);
         return;
       }
+      login({ username: 'demo', role: 'user', name: 'Demo User', isDemo: true });
+      return;
+    }
 
-      if (username.trim().toLowerCase() === DEMO_CREDENTIALS.username && password === DEMO_CREDENTIALS.password) {
-        if (demoExpired) {
-          setError('The demo account has expired. Please contact the administrator for access.');
-          setLoading(false);
-          return;
-        }
-        login({ username: 'demo', role: 'user', name: 'Demo User', isDemo: true });
-        return;
-      }
-
-      const found = users.find(
-        (u) => u.username.toLowerCase() === username.trim().toLowerCase() && u.password === password
-      );
-      if (found) {
-        login({ username: found.username, role: found.role, name: found.name });
-        return;
-      }
-
-      setError('Invalid username or password');
+    const result = await authenticate(username.trim(), password);
+    if (!result.success) {
+      setError(result.error ?? 'Invalid username or password');
       setLoading(false);
-    }, 400);
+    }
   };
 
   return (

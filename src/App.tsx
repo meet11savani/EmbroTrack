@@ -7,39 +7,39 @@ import { Records } from '@/pages/records/Records';
 import { Parties } from '@/pages/parties/Parties';
 import { Qualities } from '@/pages/qualities/Qualities';
 import { Workers } from '@/pages/workers/Workers';
-import { Settings } from '@/pages/settings/Settings';
 import { LoginPage } from '@/pages/auth/LoginPage';
+import { UsersData } from '@/pages/admin/UsersData';
+import { AddUser } from '@/pages/admin/AddUser';
+import { UserSettings } from '@/pages/user/UserSettings';
 
-type Tab = 'records' | 'parties' | 'qualities' | 'workers' | 'settings';
+type AdminTab = 'usersData' | 'addUser';
+type UserTab = 'records' | 'parties' | 'qualities' | 'workers' | 'settings';
 
 function AppContent() {
   const { settings } = useApp();
   const { isAuthenticated, isAdmin, user, logout } = useAuth();
-  const [activeTab, setActiveTab] = useState<Tab>('records');
+  const [adminTab, setAdminTab] = useState<AdminTab>('usersData');
+  const [userTab, setUserTab] = useState<UserTab>('records');
   const searchRef = useRef<HTMLInputElement>(null);
 
-  // Keyboard shortcuts
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement;
       const isTyping = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT' || target.isContentEditable;
 
-      // N — New Record (focus challan field)
-      if (e.key === 'n' && !isTyping && !e.ctrlKey && !e.metaKey) {
+      if (e.key === 'n' && !isTyping && !e.ctrlKey && !e.metaKey && !isAdmin) {
         e.preventDefault();
-        setActiveTab('records');
+        setUserTab('records');
         setTimeout(() => {
           document.getElementById('challanNo')?.focus();
         }, 100);
       }
 
-      // / — Focus search
       if (e.key === '/' && !isTyping) {
         e.preventDefault();
         searchRef.current?.focus();
       }
 
-      // CTRL+S — Save current form
       if ((e.ctrlKey || e.metaKey) && e.key === 's') {
         e.preventDefault();
         const form = document.querySelector('form');
@@ -52,18 +52,56 @@ function AppContent() {
 
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, []);
+  }, [isAdmin]);
 
   if (!isAuthenticated) {
     return <LoginPage />;
   }
 
-  const navItems: { key: Tab; label: string }[] = [
+  if (isAdmin) {
+    const adminNavItems: { key: AdminTab; label: string }[] = [
+      { key: 'usersData', label: 'Users Data' },
+      { key: 'addUser', label: 'Add User' },
+    ];
+
+    return (
+      <div className="min-h-screen bg-cream">
+        <Header
+          businessName={settings.businessName}
+          businessSubtitle={settings.businessSubtitle}
+          activeTab={adminTab}
+          onNavigate={(tab) => setAdminTab(tab as AdminTab)}
+          searchRef={searchRef}
+          navItems={adminNavItems}
+          userName={user?.name ?? ''}
+          userRole={user?.role ?? 'admin'}
+          onLogout={logout}
+        />
+
+        <main className="max-w-7xl mx-auto px-6 lg:px-8 py-6 lg:py-8">
+          {adminTab === 'usersData' && <UsersData />}
+          {adminTab === 'addUser' && <AddUser />}
+        </main>
+
+        <footer className="border-t border-cream-300 py-6 no-print">
+          <div className="max-w-7xl mx-auto px-6 lg:px-8 text-center">
+            <p className="text-xs text-navy-300">
+              {settings.businessName} — {settings.businessSubtitle}
+            </p>
+          </div>
+        </footer>
+
+        <ToastContainer />
+      </div>
+    );
+  }
+
+  const userNavItems: { key: UserTab; label: string }[] = [
     { key: 'records', label: 'Records' },
     { key: 'parties', label: 'Parties' },
     { key: 'qualities', label: 'Qualities' },
     { key: 'workers', label: 'Workers' },
-    ...(isAdmin ? [{ key: 'settings' as Tab, label: 'Settings' }] : []),
+    { key: 'settings', label: 'Settings' },
   ];
 
   return (
@@ -71,21 +109,21 @@ function AppContent() {
       <Header
         businessName={settings.businessName}
         businessSubtitle={settings.businessSubtitle}
-        activeTab={activeTab}
-        onNavigate={(tab) => setActiveTab(tab as Tab)}
+        activeTab={userTab}
+        onNavigate={(tab) => setUserTab(tab as UserTab)}
         searchRef={searchRef}
-        navItems={navItems}
+        navItems={userNavItems}
         userName={user?.name ?? ''}
         userRole={user?.role ?? 'user'}
         onLogout={logout}
       />
 
       <main className="max-w-7xl mx-auto px-6 lg:px-8 py-6 lg:py-8">
-        {activeTab === 'records' && <Records />}
-        {activeTab === 'parties' && <Parties />}
-        {activeTab === 'qualities' && <Qualities />}
-        {activeTab === 'workers' && <Workers />}
-        {activeTab === 'settings' && isAdmin && <Settings />}
+        {userTab === 'records' && <Records />}
+        {userTab === 'parties' && <Parties />}
+        {userTab === 'qualities' && <Qualities />}
+        {userTab === 'workers' && <Workers />}
+        {userTab === 'settings' && <UserSettings />}
       </main>
 
       <footer className="border-t border-cream-300 py-6 no-print">
