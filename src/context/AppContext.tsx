@@ -333,11 +333,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
     setSyncState((prev) => ({ ...prev, status: 'syncing', error: null }));
     try {
-      const result = await syncNow(settings.googleScriptUrl, records, parties, qualities);
+      const result = await syncNow(settings.googleScriptUrl, records, parties, qualities, workers, workerTransactions);
       if (result.success) {
         setRecords((prev) => prev.map((r) => ({ ...r, syncStatus: 'synced' as SyncStatus })));
         setParties((prev) => prev.map((p) => ({ ...p, syncStatus: 'synced' as SyncStatus })));
         setQualities((prev) => prev.map((q) => ({ ...q, syncStatus: 'synced' as SyncStatus })));
+        setWorkers((prev) => prev.map((w) => ({ ...w, syncStatus: 'synced' as SyncStatus })));
+        setWorkerTransactions((prev) => prev.map((t) => ({ ...t, syncStatus: 'synced' as SyncStatus })));
         setSyncState({ status: 'synced', pendingCount: 0, lastSync: nowISO(), error: null });
         showToast('All data synced successfully', 'success');
       } else {
@@ -349,7 +351,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setSyncState((prev) => ({ ...prev, status: 'error', error: message }));
       showToast('Sync failed: ' + message, 'error');
     }
-  }, [settings.googleScriptUrl, records, parties, qualities, showToast]);
+  }, [settings.googleScriptUrl, records, parties, qualities, workers, workerTransactions, showToast]);
 
   const exportBackup = useCallback(() => {
     const data = storage.exportBackup();

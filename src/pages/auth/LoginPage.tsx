@@ -6,7 +6,7 @@ import { useAuth, isDemoAccountExpired } from '@/context/AuthContext';
 const ADMIN_CREDENTIALS = {
   username: 'adminmeetsavani',
   password: 'admin@meet2004@',
-};
+};  
 
 const DEMO_CREDENTIALS = {
   username: 'meetsavani',

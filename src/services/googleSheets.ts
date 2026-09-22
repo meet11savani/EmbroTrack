@@ -1,10 +1,12 @@
-import type { EmbroideryRecord, Party, Quality, AppSettings } from '@/types';
+import type { EmbroideryRecord, Party, Quality, AppSettings, Worker, WorkerTransaction } from '@/types';
 import type { UserRole } from '@/context/AuthContext';
 
 interface SyncPayload {
   records: EmbroideryRecord[];
   parties: Party[];
   qualities: Quality[];
+  workers: Worker[];
+  workerTransactions: WorkerTransaction[];
   settings: AppSettings;
 }
 
@@ -13,6 +15,8 @@ interface SyncResponse {
   records?: EmbroideryRecord[];
   parties?: Party[];
   qualities?: Quality[];
+  workers?: Worker[];
+  workerTransactions?: WorkerTransaction[];
   error?: string;
 }
 

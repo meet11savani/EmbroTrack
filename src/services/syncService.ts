@@ -1,4 +1,4 @@
-import type { EmbroideryRecord, Party, Quality, SyncStatus } from '@/types';
+import type { EmbroideryRecord, Party, Quality, SyncStatus, Worker, WorkerTransaction } from '@/types';
 import { storage, type SyncQueueItem } from './localStorage';
 import { googleSheets } from './googleSheets';
 
@@ -93,7 +93,9 @@ export async function syncNow(
   scriptUrl: string,
   records: EmbroideryRecord[],
   parties: Party[],
-  qualities: Quality[]
+  qualities: Quality[],
+  workers: Worker[],
+  workerTransactions: WorkerTransaction[]
 ): Promise<SyncResult> {
   if (!scriptUrl) {
     return { success: false, syncedRecords: 0, pulledRecords: 0, error: 'Google Sheets URL not configured' };
@@ -102,17 +104,29 @@ export async function syncNow(
   const settings = storage.getSettings();
 
   try {
-    const response = await googleSheets.syncAll(scriptUrl, { records, parties, qualities, settings });
+    const response = await googleSheets.syncAll(scriptUrl, {
+      records,
+      parties,
+      qualities,
+      workers,
+      workerTransactions,
+      settings,
+    });
 
     let pulled = 0;
-    if (response.records || response.parties || response.qualities) {
-      pulled = (response.records?.length ?? 0) + (response.parties?.length ?? 0) + (response.qualities?.length ?? 0);
+    if (response.records || response.parties || response.qualities || response.workers || response.workerTransactions) {
+      pulled =
+        (response.records?.length ?? 0) +
+        (response.parties?.length ?? 0) +
+        (response.qualities?.length ?? 0) +
+        (response.workers?.length ?? 0) +
+        (response.workerTransactions?.length ?? 0);
     }
 
     storage.saveSyncQueue([]);
     return {
       success: true,
-      syncedRecords: records.length + parties.length + qualities.length,
+      syncedRecords: records.length + parties.length + qualities.length + workers.length + workerTransactions.length,
       pulledRecords: pulled,
     };
   } catch (err) {
