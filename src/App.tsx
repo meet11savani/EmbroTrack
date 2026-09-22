@@ -11,9 +11,8 @@ import { LoginPage } from '@/pages/auth/LoginPage';
 import { UsersData } from '@/pages/admin/UsersData';
 import { AddUser } from '@/pages/admin/AddUser';
 import { UserSettings } from '@/pages/user/UserSettings';
-import { Settings } from '@/pages/settings/Settings';
 
-type AdminTab = 'usersData' | 'addUser' | 'settings';
+type AdminTab = 'usersData' | 'addUser';
 type UserTab = 'records' | 'parties' | 'qualities' | 'workers' | 'settings';
 
 function AppContent() {
@@ -63,7 +62,6 @@ function AppContent() {
     const adminNavItems: { key: AdminTab; label: string }[] = [
       { key: 'usersData', label: 'Users Data' },
       { key: 'addUser', label: 'Add User' },
-      { key: 'settings', label: 'Settings' },
     ];
 
     return (
@@ -83,7 +81,6 @@ function AppContent() {
         <main className="max-w-7xl mx-auto px-6 lg:px-8 py-6 lg:py-8">
           {adminTab === 'usersData' && <UsersData />}
           {adminTab === 'addUser' && <AddUser />}
-          {adminTab === 'settings' && <Settings />}
         </main>
 
         <footer className="border-t border-cream-300 py-6 no-print">

@@ -11,8 +11,8 @@
 const CONFIG = {
   // ===== ADMIN CREDENTIALS =====
   // Change these before deploying!
-  ADMIN_USERNAME: 'adminmeetsavani',  
-  ADMIN_PASSWORD: 'admin@meet2004@',
+  ADMIN_USERNAME: 'admin',
+  ADMIN_PASSWORD: 'admin123',
   // =============================
 
   SHEET_RECORDS: 'Records',

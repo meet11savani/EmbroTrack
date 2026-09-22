@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useState, useEffect } from 'react';
 import { Trash2, ShieldCheck, User as UserIcon, Users as UsersIcon } from 'lucide-react';
 import { useAuth, type ManagedUser } from '@/context/AuthContext';

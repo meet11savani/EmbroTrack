@@ -4,13 +4,13 @@ import { Lock, User, Eye, EyeOff, Loader2, Clock, AlertTriangle } from 'lucide-r
 import { useAuth, isDemoAccountExpired } from '@/context/AuthContext';
 
 const ADMIN_CREDENTIALS = {
-  username: 'adminmeetsavani',
-  password: 'admin@meet2004@',
-};  
+  username: 'admin',
+  password: 'admin123',
+};
 
 const DEMO_CREDENTIALS = {
-  username: 'meetsavani',
-  password: '123456',
+  username: 'demo',
+  password: 'demo123',
 };
 
 export function LoginPage() {
