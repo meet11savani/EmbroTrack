@@ -10,10 +10,20 @@ interface UserFormData {
   phone: string;
   email: string;
   role: 'user' | 'admin';
+  address: string;
+  city: string;
+  state: string;
+  pincode: string;
+  gstNumber: string;
+  companyName: string;
+  notes: string;
+  active: boolean;
 }
 
 const EMPTY_FORM: UserFormData = {
   name: '', username: '', password: '', phone: '', email: '', role: 'user',
+  address: '', city: '', state: '', pincode: '', gstNumber: '', companyName: '', notes: '',
+  active: true,
 };
 
 export function AddUser() {
@@ -34,6 +44,9 @@ export function AddUser() {
     if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       errs.email = 'Enter a valid email address';
     }
+    if (formData.pincode && !/^\d{6}$/.test(formData.pincode)) {
+      errs.pincode = 'Enter a valid 6-digit pincode';
+    }
 
     if (Object.keys(errs).length > 0) {
       setErrors(errs);
@@ -48,6 +61,14 @@ export function AddUser() {
       phone: formData.phone,
       email: formData.email,
       role: formData.role,
+      address: formData.address,
+      city: formData.city,
+      state: formData.state,
+      pincode: formData.pincode,
+      gstNumber: formData.gstNumber,
+      companyName: formData.companyName,
+      notes: formData.notes,
+      active: formData.active,
     });
     setSubmitting(false);
 
@@ -137,6 +158,82 @@ export function AddUser() {
         </div>
 
         <div>
+          <label className="label-field">Company Name</label>
+          <input
+            type="text"
+            value={formData.companyName}
+            onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
+            className="input-field"
+            placeholder="Patel Embroidery Works"
+          />
+        </div>
+
+        <div>
+          <label className="label-field">Address</label>
+            <textarea
+              value={formData.address}
+              onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+              className="input-field min-h-[60px] resize-y"
+              placeholder="Plot 123, Industrial Area, Near Textile Market"
+            />
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+          <div>
+            <label className="label-field">City</label>
+            <input
+              type="text"
+              value={formData.city}
+              onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+              className="input-field"
+              placeholder="Surat"
+            />
+          </div>
+          <div>
+            <label className="label-field">State</label>
+            <input
+              type="text"
+              value={formData.state}
+              onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+              className="input-field"
+              placeholder="Gujarat"
+            />
+          </div>
+          <div>
+            <label className="label-field">Pincode</label>
+            <input
+              type="text"
+              value={formData.pincode}
+              onChange={(e) => setFormData({ ...formData, pincode: e.target.value })}
+              className={`input-field ${errors.pincode ? 'border-danger' : ''}`}
+              placeholder="395006"
+            />
+            {errors.pincode && <p className="mt-1 text-xs text-danger">{errors.pincode}</p>}
+          </div>
+        </div>
+
+        <div>
+          <label className="label-field">GST Number</label>
+          <input
+            type="text"
+            value={formData.gstNumber}
+            onChange={(e) => setFormData({ ...formData, gstNumber: e.target.value.toUpperCase() })}
+            className="input-field uppercase"
+            placeholder="24ABCDE1234F1Z5"
+          />
+        </div>
+
+        <div>
+          <label className="label-field">Notes</label>
+          <textarea
+            value={formData.notes}
+            onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+            className="input-field min-h-[50px] resize-y"
+            placeholder="Any additional information about this user"
+          />
+        </div>
+
+        <div>
           <label className="label-field">Role</label>
           <div className="grid grid-cols-2 gap-3">
             <button
@@ -160,6 +257,34 @@ export function AddUser() {
               }`}
             >
               <ShieldCheck size={14} className="inline mr-1.5" /> Admin
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <label className="label-field">Account Status</label>
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={() => setFormData({ ...formData, active: true })}
+              className={`rounded-xl border px-4 py-2.5 text-sm font-semibold transition-all ${
+                formData.active
+                  ? 'border-teal bg-teal/10 text-teal'
+                  : 'border-cream-300 bg-white text-navy-300 hover:bg-cream-100'
+              }`}
+            >
+              Active
+            </button>
+            <button
+              type="button"
+              onClick={() => setFormData({ ...formData, active: false })}
+              className={`rounded-xl border px-4 py-2.5 text-sm font-semibold transition-all ${
+                !formData.active
+                  ? 'border-danger bg-danger/10 text-danger'
+                  : 'border-cream-300 bg-white text-navy-300 hover:bg-cream-100'
+              }`}
+            >
+              Inactive
             </button>
           </div>
         </div>

@@ -3,14 +3,14 @@ import { useState, type FormEvent } from 'react';
 import { Lock, User, Eye, EyeOff, Loader2, Clock, AlertTriangle } from 'lucide-react';
 import { useAuth, isDemoAccountExpired } from '@/context/AuthContext';
 
-const ADMIN_CREDENTIALS = {
-  username: 'admin',
-  password: 'admin123',
-};
-
 const DEMO_CREDENTIALS = {
   username: 'demo',
   password: 'demo123',
+};
+
+const LOCAL_ADMIN_CREDENTIALS = {
+  username: 'adminmeetsavani',
+  password: 'admin@meet2004@',
 };
 
 export function LoginPage() {
@@ -28,8 +28,8 @@ export function LoginPage() {
     setError('');
     setLoading(true);
 
-    if (username.trim() === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
-      login({ username: 'admin', role: 'admin', name: 'Administrator' });
+    if (username.trim() === LOCAL_ADMIN_CREDENTIALS.username && password === LOCAL_ADMIN_CREDENTIALS.password) {
+      login({ username: 'adminmeetsavani', role: 'admin', name: 'Meet Savani' });
       return;
     }
 
@@ -125,12 +125,6 @@ export function LoginPage() {
           </form>
 
           <div className="mt-6 pt-6 border-t border-cream-200 space-y-3">
-            <div className="rounded-xl bg-cream-100 px-4 py-3 text-center">
-              <p className="text-xs text-navy-300">
-                <span className="font-semibold text-navy">Admin login:</span> admin / admin123
-              </p>
-            </div>
-
             {demoExpired ? (
               <div className="rounded-xl bg-danger/10 border border-danger/20 px-4 py-3 flex items-center gap-2">
                 <AlertTriangle size={16} className="text-danger shrink-0" />

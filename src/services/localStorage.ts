@@ -15,8 +15,15 @@ const DEFAULT_SETTINGS: AppSettings = {
   challanStartNumber: 1,
   challanPadding: 4,
   googleScriptUrl: '',
+  adminScriptUrl: '',
   businessName: 'EmbroTrack',
   businessSubtitle: 'Embroidery Record Management',
+  adminPhone: '',
+  adminEmail: '',
+  defaultUserRole: 'user',
+  requireApproval: false,
+  autoSyncOnStartup: false,
+  enableDemoAccount: true,
 };
 
 function safeParse<T>(raw: string | null, fallback: T): T {

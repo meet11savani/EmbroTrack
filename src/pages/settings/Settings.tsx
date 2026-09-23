@@ -1,5 +1,5 @@
 import { useState, useRef, type FormEvent } from 'react';
-import { Settings as SettingsIcon, RefreshCw, Download, Upload, Trash2, Link2, Hash, Save, Database } from 'lucide-react';
+import { Settings as SettingsIcon, RefreshCw, Download, Upload, Trash2, Link2, Hash, Save, Database, CloudUpload, ShieldCheck, UserCog, ToggleLeft, ToggleRight } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { UserManagement } from '@/pages/settings/UserManagement';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
@@ -20,8 +20,15 @@ export function Settings() {
   const [challanStartNumber, setChallanStartNumber] = useState(String(settings.challanStartNumber));
   const [challanPadding, setChallanPadding] = useState(String(settings.challanPadding));
   const [googleScriptUrl, setGoogleScriptUrl] = useState(settings.googleScriptUrl);
+  const [adminScriptUrl, setAdminScriptUrl] = useState(settings.adminScriptUrl);
   const [businessName, setBusinessName] = useState(settings.businessName);
   const [businessSubtitle, setBusinessSubtitle] = useState(settings.businessSubtitle);
+  const [adminPhone, setAdminPhone] = useState(settings.adminPhone);
+  const [adminEmail, setAdminEmail] = useState(settings.adminEmail);
+  const [defaultUserRole, setDefaultUserRole] = useState<'user' | 'admin'>(settings.defaultUserRole);
+  const [requireApproval, setRequireApproval] = useState(settings.requireApproval);
+  const [autoSyncOnStartup, setAutoSyncOnStartup] = useState(settings.autoSyncOnStartup);
+  const [enableDemoAccount, setEnableDemoAccount] = useState(settings.enableDemoAccount);
 
   const handleSaveSettings = (e: FormEvent) => {
     e.preventDefault();
@@ -30,8 +37,15 @@ export function Settings() {
       challanStartNumber: parseInt(challanStartNumber) || 1,
       challanPadding: Math.max(1, parseInt(challanPadding) || 4),
       googleScriptUrl: googleScriptUrl.trim(),
+      adminScriptUrl: adminScriptUrl.trim(),
       businessName: businessName.trim() || 'EmbroTrack',
       businessSubtitle: businessSubtitle.trim() || 'Embroidery Record Management',
+      adminPhone: adminPhone.trim(),
+      adminEmail: adminEmail.trim(),
+      defaultUserRole,
+      requireApproval,
+      autoSyncOnStartup,
+      enableDemoAccount,
     });
     showToast('Settings saved', 'success');
   };
@@ -40,6 +54,14 @@ export function Settings() {
     setSyncing(true);
     await doSync();
     setSyncing(false);
+  };
+
+  const [savingToSheet, setSavingToSheet] = useState(false);
+
+  const handleSaveToSheet = async () => {
+    setSavingToSheet(true);
+    await doSync();
+    setSavingToSheet(false);
   };
 
   const handleExport = () => {
@@ -100,6 +122,102 @@ export function Settings() {
       {/* User Management (admin only) */}
       <UserManagement />
 
+      {/* Admin Configuration */}
+      <form onSubmit={handleSaveSettings} className="card p-6 lg:p-8 space-y-6">
+        <div className="flex items-center gap-2">
+          <ShieldCheck size={18} className="text-navy" />
+          <h3 className="text-lg font-bold text-navy">Admin Configuration</h3>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="label-field">Admin Contact Phone</label>
+            <input type="text" value={adminPhone} onChange={(e) => setAdminPhone(e.target.value)} className="input-field" placeholder="98765 43210" />
+          </div>
+          <div>
+            <label className="label-field">Admin Contact Email</label>
+            <input type="text" value={adminEmail} onChange={(e) => setAdminEmail(e.target.value)} className="input-field" placeholder="admin@embrotrack.com" />
+          </div>
+        </div>
+
+        <div>
+          <label className="label-field">Default Role for New Users</label>
+          <div className="grid grid-cols-2 gap-3 max-w-xs">
+            <button
+              type="button"
+              onClick={() => setDefaultUserRole('user')}
+              className={`rounded-xl border px-4 py-2.5 text-sm font-semibold transition-all ${
+                defaultUserRole === 'user' ? 'border-teal bg-teal/10 text-teal' : 'border-cream-300 bg-white text-navy-300 hover:bg-cream-100'
+              }`}
+            >
+              User
+            </button>
+            <button
+              type="button"
+              onClick={() => setDefaultUserRole('admin')}
+              className={`rounded-xl border px-4 py-2.5 text-sm font-semibold transition-all ${
+                defaultUserRole === 'admin' ? 'border-navy bg-navy/10 text-navy' : 'border-cream-300 bg-white text-navy-300 hover:bg-cream-100'
+              }`}
+            >
+              Admin
+            </button>
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <button
+            type="button"
+            onClick={() => setRequireApproval((v) => !v)}
+            className="w-full flex items-center justify-between rounded-xl border border-cream-300 bg-white px-4 py-3 text-left transition-colors hover:bg-cream-50"
+          >
+            <div className="flex items-center gap-3">
+              <UserCog size={18} className="text-navy-300" />
+              <div>
+                <p className="text-sm font-semibold text-navy">Require Admin Approval for New Users</p>
+                <p className="text-xs text-navy-300">Newly created accounts must be approved before they can sign in</p>
+              </div>
+            </div>
+            {requireApproval ? <ToggleRight size={24} className="text-teal" /> : <ToggleLeft size={24} className="text-navy-200" />}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setAutoSyncOnStartup((v) => !v)}
+            className="w-full flex items-center justify-between rounded-xl border border-cream-300 bg-white px-4 py-3 text-left transition-colors hover:bg-cream-50"
+          >
+            <div className="flex items-center gap-3">
+              <RefreshCw size={18} className="text-navy-300" />
+              <div>
+                <p className="text-sm font-semibold text-navy">Auto-Sync on App Startup</p>
+                <p className="text-xs text-navy-300">Automatically sync data with Google Sheets when the app launches</p>
+              </div>
+            </div>
+            {autoSyncOnStartup ? <ToggleRight size={24} className="text-teal" /> : <ToggleLeft size={24} className="text-navy-200" />}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setEnableDemoAccount((v) => !v)}
+            className="w-full flex items-center justify-between rounded-xl border border-cream-300 bg-white px-4 py-3 text-left transition-colors hover:bg-cream-50"
+          >
+            <div className="flex items-center gap-3">
+              <ToggleLeft size={18} className="text-navy-300" />
+              <div>
+                <p className="text-sm font-semibold text-navy">Enable Demo Account</p>
+                <p className="text-xs text-navy-300">Allow login with the demo account (demo / demo123)</p>
+              </div>
+            </div>
+            {enableDemoAccount ? <ToggleRight size={24} className="text-teal" /> : <ToggleLeft size={24} className="text-navy-200" />}
+          </button>
+        </div>
+
+        <div className="flex justify-end">
+          <button type="submit" className="btn-primary">
+            <Save size={16} /> Save All Settings
+          </button>
+        </div>
+      </form>
+
       {/* Business & Challan Settings */}
       <form onSubmit={handleSaveSettings} className="card p-6 lg:p-8 space-y-6">
         <div className="flex items-center gap-2">
@@ -149,7 +267,7 @@ export function Settings() {
         </div>
 
         <div>
-          <label className="label-field">Google Apps Script Web App URL</label>
+          <label className="label-field">Data Backend URL (Google Apps Script)</label>
           <input
             type="url"
             value={googleScriptUrl}
@@ -158,16 +276,30 @@ export function Settings() {
             placeholder="https://script.google.com/macros/s/XXXXX/exec"
           />
           <p className="mt-1.5 text-xs text-navy-300">
-            Paste your Google Apps Script Web App URL here. The app works offline without this.
+            Paste the data backend Web App URL here. Handles records, parties, qualities, and workers.
+          </p>
+        </div>
+
+        <div>
+          <label className="label-field">Admin Backend URL (Google Apps Script)</label>
+          <input
+            type="url"
+            value={adminScriptUrl}
+            onChange={(e) => setAdminScriptUrl(e.target.value)}
+            className="input-field"
+            placeholder="https://script.google.com/macros/s/YYYYY/exec"
+          />
+          <p className="mt-1.5 text-xs text-navy-300">
+            Paste the admin backend Web App URL here. Handles login and user account management.
           </p>
         </div>
 
         <div className="flex items-center gap-3 flex-wrap">
           <button
-            onClick={() => { updateSettings({ googleScriptUrl: googleScriptUrl.trim() }); showToast('URL saved', 'success'); }}
+            onClick={() => { updateSettings({ googleScriptUrl: googleScriptUrl.trim(), adminScriptUrl: adminScriptUrl.trim() }); showToast('URLs saved', 'success'); }}
             className="btn-secondary"
           >
-            <Save size={16} /> Save URL
+            <Save size={16} /> Save URLs
           </button>
           <button
             onClick={handleSync}
@@ -176,6 +308,14 @@ export function Settings() {
           >
             <RefreshCw size={16} className={syncing ? 'animate-spin' : ''} />
             {syncing ? 'Syncing...' : 'Sync Now'}
+          </button>
+          <button
+            onClick={handleSaveToSheet}
+            disabled={!settings.googleScriptUrl || savingToSheet}
+            className="btn-primary disabled:opacity-50"
+          >
+            <CloudUpload size={16} className={savingToSheet ? 'animate-pulse' : ''} />
+            {savingToSheet ? 'Saving...' : 'Save to Sheet'}
           </button>
         </div>
 

@@ -1,14 +1,15 @@
 import { useState, useEffect } from 'react';
-import { Trash2, ShieldCheck, User as UserIcon, Users as UsersIcon } from 'lucide-react';
+import { Trash2, Eye, X, ShieldCheck, User as UserIcon, Users as UsersIcon, MapPin, Building2, FileText, Phone, Mail, Calendar, CheckCircle, XCircle } from 'lucide-react';
 import { useAuth, type ManagedUser } from '@/context/AuthContext';
 import { useApp } from '@/context/AppContext';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
-import { formatDate } from '@/utils/formatters';
+import { formatDate, formatDateTime } from '@/utils/formatters';
 
 export function UsersData() {
   const { users, deleteUser, refreshUsers } = useAuth();
   const { showToast } = useApp();
   const [deletingUser, setDeletingUser] = useState<ManagedUser | null>(null);
+  const [viewingUser, setViewingUser] = useState<ManagedUser | null>(null);
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
@@ -50,7 +51,7 @@ export function UsersData() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-cream-100 border-b border-cream-300">
-                  {['Name', 'Username', 'Phone', 'Email', 'Role', 'Created', 'Actions'].map((label, i) => (
+                  {['Name', 'Username', 'Phone', 'Role', 'Status', 'Created', 'Actions'].map((label, i) => (
                     <th key={i} className="px-4 py-3 text-left whitespace-nowrap">
                       <span className="text-xs font-bold uppercase tracking-wide text-navy-300">{label}</span>
                     </th>
@@ -68,28 +69,147 @@ export function UsersData() {
                     <td className="px-4 py-3 font-semibold text-navy whitespace-nowrap">{u.name}</td>
                     <td className="px-4 py-3 text-navy-300 whitespace-nowrap">{u.username}</td>
                     <td className="px-4 py-3 text-navy-300 whitespace-nowrap">{u.phone || '—'}</td>
-                    <td className="px-4 py-3 text-navy-300 whitespace-nowrap">{u.email || '—'}</td>
                     <td className="px-4 py-3 whitespace-nowrap">
                       <span className={`badge ${u.role === 'admin' ? 'bg-navy/10 text-navy' : 'bg-teal/10 text-teal'}`}>
                         {u.role === 'admin' ? <ShieldCheck size={12} /> : <UserIcon size={12} />}
                         {u.role}
                       </span>
                     </td>
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      <span className={`badge ${u.active !== false ? 'bg-teal/10 text-teal' : 'bg-danger/10 text-danger'}`}>
+                        {u.active !== false ? <CheckCircle size={12} /> : <XCircle size={12} />}
+                        {u.active !== false ? 'Active' : 'Inactive'}
+                      </span>
+                    </td>
                     <td className="px-4 py-3 text-navy-300 whitespace-nowrap">{formatDate(u.createdAt)}</td>
                     <td className="px-4 py-3 whitespace-nowrap">
-                      <button
-                        onClick={() => setDeletingUser(u)}
-                        className="w-7 h-7 rounded-lg border border-danger/20 bg-danger/5 flex items-center justify-center text-danger transition-colors hover:bg-danger hover:text-white"
-                        title="Delete user"
-                        aria-label="Delete user"
-                      >
-                        <Trash2 size={14} />
-                      </button>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => setViewingUser(u)}
+                          className="w-7 h-7 rounded-lg border border-navy/20 bg-navy/5 flex items-center justify-center text-navy transition-colors hover:bg-navy hover:text-white"
+                          title="View user details"
+                          aria-label="View user details"
+                        >
+                          <Eye size={14} />
+                        </button>
+                        <button
+                          onClick={() => setDeletingUser(u)}
+                          className="w-7 h-7 rounded-lg border border-danger/20 bg-danger/5 flex items-center justify-center text-danger transition-colors hover:bg-danger hover:text-white"
+                          title="Delete user"
+                          aria-label="Delete user"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* View user modal */}
+      {viewingUser && (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 no-print">
+          <div className="absolute inset-0 bg-navy/40 backdrop-blur-sm" onClick={() => setViewingUser(null)} />
+          <div className="animate-scale-in relative card p-0 max-w-lg w-full max-h-[90vh] overflow-y-auto">
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b border-cream-200">
+              <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${viewingUser.role === 'admin' ? 'bg-navy' : 'bg-teal'}`}>
+                  {viewingUser.role === 'admin' ? <ShieldCheck size={18} className="text-cream-100" /> : <UserIcon size={18} className="text-white" />}
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-navy">{viewingUser.name}</h3>
+                  <p className="text-xs text-navy-300">@{viewingUser.username}</p>
+                </div>
+              </div>
+              <button onClick={() => setViewingUser(null)} className="text-navy-300 hover:text-navy">
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-6 space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div className={`badge justify-center ${viewingUser.role === 'admin' ? 'bg-navy/10 text-navy' : 'bg-teal/10 text-teal'}`}>
+                  {viewingUser.role === 'admin' ? <ShieldCheck size={14} /> : <UserIcon size={14} />}
+                  {viewingUser.role}
+                </div>
+                <div className={`badge justify-center ${viewingUser.active !== false ? 'bg-teal/10 text-teal' : 'bg-danger/10 text-danger'}`}>
+                  {viewingUser.active !== false ? <CheckCircle size={14} /> : <XCircle size={14} />}
+                  {viewingUser.active !== false ? 'Active' : 'Inactive'}
+                </div>
+              </div>
+
+              {viewingUser.companyName && (
+                <div className="flex items-start gap-3">
+                  <Building2 size={16} className="text-navy-300 mt-0.5 shrink-0" />
+                  <div>
+                    <p className="text-xs font-medium text-navy-300">Company</p>
+                    <p className="text-sm text-navy">{viewingUser.companyName}</p>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex items-start gap-3">
+                <Phone size={16} className="text-navy-300 mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-xs font-medium text-navy-300">Phone</p>
+                  <p className="text-sm text-navy">{viewingUser.phone || '—'}</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <Mail size={16} className="text-navy-300 mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-xs font-medium text-navy-300">Email</p>
+                  <p className="text-sm text-navy break-all">{viewingUser.email || '—'}</p>
+                </div>
+              </div>
+
+              {viewingUser.address && (
+                <div className="flex items-start gap-3">
+                  <MapPin size={16} className="text-navy-300 mt-0.5 shrink-0" />
+                  <div>
+                    <p className="text-xs font-medium text-navy-300">Address</p>
+                    <p className="text-sm text-navy">{viewingUser.address}</p>
+                    {(viewingUser.city || viewingUser.state || viewingUser.pincode) && (
+                      <p className="text-sm text-navy-300">
+                        {[viewingUser.city, viewingUser.state, viewingUser.pincode].filter(Boolean).join(', ')}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {viewingUser.gstNumber && (
+                <div className="flex items-start gap-3">
+                  <FileText size={16} className="text-navy-300 mt-0.5 shrink-0" />
+                  <div>
+                    <p className="text-xs font-medium text-navy-300">GST Number</p>
+                    <p className="text-sm text-navy font-mono">{viewingUser.gstNumber}</p>
+                  </div>
+                </div>
+              )}
+
+              {viewingUser.notes && (
+                <div className="rounded-xl bg-cream-100 p-3">
+                  <p className="text-xs font-medium text-navy-300 mb-1">Notes</p>
+                  <p className="text-sm text-navy whitespace-pre-wrap">{viewingUser.notes}</p>
+                </div>
+              )}
+
+              <div className="flex items-start gap-3 pt-3 border-t border-cream-200">
+                <Calendar size={16} className="text-navy-300 mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-xs font-medium text-navy-300">Created</p>
+                  <p className="text-sm text-navy">{formatDateTime(viewingUser.createdAt)}</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}

@@ -54,8 +54,15 @@ export interface AppSettings {
   challanStartNumber: number;
   challanPadding: number;
   googleScriptUrl: string;
+  adminScriptUrl: string;
   businessName: string;
   businessSubtitle: string;
+  adminPhone: string;
+  adminEmail: string;
+  defaultUserRole: 'user' | 'admin';
+  requireApproval: boolean;
+  autoSyncOnStartup: boolean;
+  enableDemoAccount: boolean;
 }
 
 export type EntityType = 'records' | 'parties' | 'qualities';

@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
-import { googleSheets, type RemoteUser } from '@/services/googleSheets';
+import { adminApi, type RemoteUser } from '@/services/googleSheets';
 import { storage } from '@/services/localStorage';
 
 export type UserRole = 'admin' | 'user';
@@ -22,6 +22,14 @@ export interface ManagedUser {
   phone: string;
   email: string;
   role: UserRole;
+  address: string;
+  city: string;
+  state: string;
+  pincode: string;
+  gstNumber: string;
+  companyName: string;
+  notes: string;
+  active: boolean;
   createdAt: string;
 }
 
@@ -77,6 +85,14 @@ function remoteToLocal(ru: RemoteUser): ManagedUser {
     phone: ru.phone,
     email: ru.email,
     role: ru.role,
+    address: ru.address || '',
+    city: ru.city || '',
+    state: ru.state || '',
+    pincode: ru.pincode || '',
+    gstNumber: ru.gstNumber || '',
+    companyName: ru.companyName || '',
+    notes: ru.notes || '',
+    active: ru.active !== false,
     createdAt: ru.createdAt,
   };
 }
@@ -160,6 +176,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return storage.getSettings().googleScriptUrl;
   }, []);
 
+  const getAdminUrl = useCallback((): string => {
+    return storage.getSettings().adminScriptUrl;
+  }, []);
+
   const login = useCallback((u: AuthUser) => {
     if (u.isDemo) {
       if (!localStorage.getItem(DEMO_FIRST_LOGIN_KEY)) {
@@ -173,11 +193,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(() => setUser(null), []);
 
   const authenticate = useCallback(async (username: string, password: string): Promise<{ success: boolean; error?: string }> => {
-    const url = getBackendUrl();
+    const adminUrl = getAdminUrl();
 
-    if (url) {
+    if (adminUrl) {
       try {
-        const result = await googleSheets.login(url, username, password);
+        const result = await adminApi.login(adminUrl, username, password);
         if (result.success && result.user) {
           login({ ...result.user, token: result.token });
           return { success: true };
@@ -188,33 +208,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     }
 
-    return { success: false, error: 'No backend URL configured. Contact your administrator.' };
-  }, [getBackendUrl, login]);
+    return { success: false, error: 'No admin backend URL configured. Contact your administrator.' };
+  }, [getAdminUrl, login]);
 
   const refreshUsers = useCallback(async () => {
-    const url = getBackendUrl();
-    if (!url || !user?.token || !isAdmin) return;
+    const adminUrl = getAdminUrl();
+    if (!adminUrl || !user?.token || !isAdmin) return;
     try {
-      const result = await googleSheets.getUsers(url, user.token);
+      const result = await adminApi.getUsers(adminUrl, user.token);
       if (result.success && result.users) {
         setUsers(result.users.map(remoteToLocal));
       }
     } catch {
       // keep local cache on failure
     }
-  }, [getBackendUrl, user]);
+  }, [getAdminUrl, user]);
 
   const addUser = useCallback(async (data: Omit<ManagedUser, 'id' | 'createdAt'>): Promise<{ success: boolean; error?: string }> => {
-    const url = getBackendUrl();
-    if (url && user?.token) {
+    const adminUrl = getAdminUrl();
+    if (adminUrl && user?.token) {
       try {
-        const result = await googleSheets.createUser(url, user.token, {
+        const result = await adminApi.createUser(adminUrl, user.token, {
           username: data.username.trim(),
           password: data.password,
           role: data.role,
           name: data.name.trim(),
           phone: data.phone,
           email: data.email,
+          address: data.address,
+          city: data.city,
+          state: data.state,
+          pincode: data.pincode,
+          gstNumber: data.gstNumber,
+          companyName: data.companyName,
+          notes: data.notes,
+          active: data.active,
         });
         if (!result.success) {
           return { success: false, error: result.error ?? 'Failed to create user' };
@@ -226,7 +254,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     }
 
-    // Offline fallback — local only (works only on this device)
+    // No admin URL — local only fallback (works only on this device)
     const exists = users.some((u) => u.username.toLowerCase() === data.username.trim().toLowerCase());
     if (exists) return { success: false, error: 'Username already exists' };
 
@@ -239,23 +267,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
     setUsers((prev) => [...prev, newUser]);
     return { success: true };
-  }, [getBackendUrl, user, users, refreshUsers]);
+  }, [getAdminUrl, user, users, refreshUsers]);
 
   const deleteUser = useCallback(async (id: string): Promise<void> => {
     const found = users.find((u) => u.id === id);
     if (!found) return;
 
-    const url = getBackendUrl();
-    if (url && user?.token) {
+    const adminUrl = getAdminUrl();
+    if (adminUrl && user?.token) {
       try {
-        await googleSheets.deleteUser(url, user.token, found.username);
+        await adminApi.deleteUser(adminUrl, user.token, found.username);
       } catch {
         // fall through to local delete
       }
     }
 
     setUsers((prev) => prev.filter((u) => u.id !== id));
-  }, [getBackendUrl, user, users]);
+  }, [getAdminUrl, user, users]);
 
   const isAdmin = user?.role === 'admin';
 

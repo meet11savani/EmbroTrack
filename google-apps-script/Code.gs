@@ -1,20 +1,20 @@
 /**
- * EmbroTrack — Google Apps Script Backend
+ * EmbroTrack — User Data Backend (Google Apps Script)
  * -----------------------------------------------------------
+ * This is the DATA backend. It handles records, parties,
+ * qualities, workers, and worker transactions.
+ *
+ * Admin authentication and user account management are handled
+ * by the SEPARATE AdminCode.gs — deploy it as its own Web App
+ * and put its URL in Settings → Admin Script URL.
+ *
  * 1. Open Google Sheets → Extensions → Apps Script
- * 2. Paste this entire file into Code.gs
- * 3. Set ADMIN credentials in the CONFIG object below
- * 4. Deploy as a Web App (Execute as: Me, Access: Anyone)
- * 5. Copy the Web App URL into EmbroTrack Settings → Google Script URL
+ * 2. Paste this file into Code.gs
+ * 3. Deploy as a Web App (Execute as: Me, Access: Anyone)
+ * 4. Copy the Web App URL into EmbroTrack Settings → Google Script URL
  */
 
 const CONFIG = {
-  // ===== ADMIN CREDENTIALS =====
-  // Change these before deploying!
-  ADMIN_USERNAME: 'admin',
-  ADMIN_PASSWORD: 'admin123',
-  // =============================
-
   SHEET_RECORDS: 'Records',
   SHEET_PARTIES: 'Parties',
   SHEET_QUALITIES: 'Qualities',
@@ -66,28 +66,23 @@ function handleRequest(e, method) {
     const operation = params.operation || 'getAll';
     const authToken = params.token || params.authToken || '';
 
-    // Authenticate every request except 'login'
-    if (operation !== 'login') {
-      if (!authToken) {
-        return jsonOut({ success: false, error: 'Authentication required' });
-      }
-      const session = verifyToken(authToken);
-      if (!session) {
-        return jsonOut({ success: false, error: 'Invalid or expired session' });
-      }
-      params._user = session;
+    // Authenticate every request
+    if (!authToken) {
+      return jsonOut({ success: false, error: 'Authentication required' });
     }
+    const session = verifyToken(authToken);
+    if (!session) {
+      return jsonOut({ success: false, error: 'Invalid or expired session' });
+    }
+    params._user = session;
 
     switch (operation) {
-      case 'login':       return handleLogin(params);
       case 'getAll':      return handleGetAll(params);
       case 'sync':        return handleSync(params);
       case 'create':      return handleCreate(params);
       case 'update':      return handleUpdate(params);
       case 'delete':      return handleDelete(params);
       case 'getUsers':    return handleGetUsers(params);
-      case 'createUser':  return handleCreateUser(params);
-      case 'deleteUser':  return handleDeleteUser(params);
       default:            return jsonOut({ success: false, error: 'Unknown operation: ' + operation });
     }
   } catch (err) {
@@ -95,49 +90,7 @@ function handleRequest(e, method) {
   }
 }
 
-// ─── Authentication ───────────────────────────────────────────
-function handleLogin(params) {
-  const username = String(params.username || '').trim();
-  const password = String(params.password || '');
-
-  if (!username || !password) {
-    return jsonOut({ success: false, error: 'Username and password are required' });
-  }
-
-  // Check admin credentials first
-  if (username === CONFIG.ADMIN_USERNAME && password === CONFIG.ADMIN_PASSWORD) {
-    const token = createToken(username, 'admin');
-    return jsonOut({
-      success: true,
-      token: token,
-      user: { username: username, role: 'admin', name: 'Administrator' }
-    });
-  }
-
-  // Check user sheet
-  const sheet = getSheet(CONFIG.SHEET_USERS);
-  const data = sheet.getDataRange().getValues();
-  for (let i = 1; i < data.length; i++) {
-    if (String(data[i][0]).trim() === username && String(data[i][1]) === password) {
-      const role = String(data[i][2] || 'user');
-      const name = String(data[i][3] || username);
-      const token = createToken(username, role);
-      return jsonOut({
-        success: true,
-        token: token,
-        user: { username: username, role: role, name: name }
-      });
-    }
-  }
-
-  return jsonOut({ success: false, error: 'Invalid username or password' });
-}
-
-function createToken(username, role) {
-  const raw = username + '|' + role + '|' + new Date().getTime();
-  return Utilities.base64Encode(raw);
-}
-
+// ─── Token verification (shared format with AdminCode.gs) ────
 function verifyToken(token) {
   try {
     const decoded = Utilities.base64Decode(token);
@@ -162,73 +115,12 @@ function requireAdmin(params) {
   return true;
 }
 
-// ─── User management (admin only) ─────────────────────────────
+// ─── User list (admin only, read-only for getAll) ────────────
 function handleGetUsers(params) {
   if (!requireAdmin(params)) {
     return jsonOut({ success: false, error: 'Admin access required' });
   }
-  const sheet = getSheet(CONFIG.SHEET_USERS);
-  const data = sheet.getDataRange().getValues();
-  const users = [];
-  for (let i = 1; i < data.length; i++) {
-    if (!data[i][0]) continue;
-    users.push({
-      username: String(data[i][0]),
-      role: String(data[i][2] || 'user'),
-      name: String(data[i][3] || ''),
-      phone: String(data[i][4] || ''),
-      email: String(data[i][5] || ''),
-      createdAt: String(data[i][6] || '')
-    });
-  }
-  return jsonOut({ success: true, users: users });
-}
-
-function handleCreateUser(params) {
-  if (!requireAdmin(params)) {
-    return jsonOut({ success: false, error: 'Admin access required' });
-  }
-  const username = String(params.username || '').trim();
-  const password = String(params.password || '');
-  const role = String(params.role || 'user');
-  const name = String(params.name || username);
-  const phone = String(params.phone || '');
-  const email = String(params.email || '');
-
-  if (!username || !password) {
-    return jsonOut({ success: false, error: 'Username and password are required' });
-  }
-
-  const sheet = getSheet(CONFIG.SHEET_USERS);
-  const data = sheet.getDataRange().getValues();
-  for (let i = 1; i < data.length; i++) {
-    if (String(data[i][0]).trim() === username) {
-      return jsonOut({ success: false, error: 'Username already exists' });
-    }
-  }
-
-  sheet.appendRow([username, password, role, name, phone, email, new Date().toISOString()]);
-  return jsonOut({ success: true, user: { username: username, role: role, name: name, phone: phone, email: email } });
-}
-
-function handleDeleteUser(params) {
-  if (!requireAdmin(params)) {
-    return jsonOut({ success: false, error: 'Admin access required' });
-  }
-  const username = String(params.username || '').trim();
-  if (!username) {
-    return jsonOut({ success: false, error: 'Username is required' });
-  }
-
-  const sheet = getSheet(CONFIG.SHEET_USERS);
-  const data = sheet.getDataRange().getValues();
-  for (let i = data.length - 1; i >= 1; i--) {
-    if (String(data[i][0]).trim() === username) {
-      sheet.deleteRow(i + 1);
-      return jsonOut({ success: true });
-    }
-  }
-  return jsonOut({ success: false, error: 'User not found' });
+  return jsonOut({ success: true, users: readUsers() });
 }
 
 // ─── Data: getAll ────────────────────────────────────────────
@@ -240,7 +132,7 @@ function handleGetAll(params) {
     qualities: readSheet(CONFIG.SHEET_QUALITIES, QUALITY_COLS),
     workers: readSheet(CONFIG.SHEET_WORKERS, WORKER_COLS),
     workerTransactions: readSheet(CONFIG.SHEET_WORKER_TXNS, WORKER_TXN_COLS),
-  users: requireAdmin(params) ? readUsers() : []
+    users: requireAdmin(params) ? readUsers() : []
   });
 }
 

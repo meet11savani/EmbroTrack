@@ -1,5 +1,5 @@
 import { useState, useRef, type FormEvent } from 'react';
-import { Settings as SettingsIcon, RefreshCw, Download, Upload, Trash2, Link2, Hash, Save, Database } from 'lucide-react';
+import { Settings as SettingsIcon, RefreshCw, Download, Upload, Trash2, Link2, Hash, Save, Database, CloudUpload } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { validateBackup } from '@/services/localStorage';
@@ -18,6 +18,7 @@ export function UserSettings() {
   const [challanStartNumber, setChallanStartNumber] = useState(String(settings.challanStartNumber));
   const [challanPadding, setChallanPadding] = useState(String(settings.challanPadding));
   const [googleScriptUrl, setGoogleScriptUrl] = useState(settings.googleScriptUrl);
+  const [adminScriptUrl, setAdminScriptUrl] = useState(settings.adminScriptUrl);
   const [businessName, setBusinessName] = useState(settings.businessName);
   const [businessSubtitle, setBusinessSubtitle] = useState(settings.businessSubtitle);
 
@@ -28,6 +29,7 @@ export function UserSettings() {
       challanStartNumber: parseInt(challanStartNumber) || 1,
       challanPadding: Math.max(1, parseInt(challanPadding) || 4),
       googleScriptUrl: googleScriptUrl.trim(),
+      adminScriptUrl: adminScriptUrl.trim(),
       businessName: businessName.trim() || 'EmbroTrack',
       businessSubtitle: businessSubtitle.trim() || 'Embroidery Record Management',
     });
@@ -38,6 +40,14 @@ export function UserSettings() {
     setSyncing(true);
     await doSync();
     setSyncing(false);
+  };
+
+  const [savingToSheet, setSavingToSheet] = useState(false);
+
+  const handleSaveToSheet = async () => {
+    setSavingToSheet(true);
+    await doSync();
+    setSavingToSheet(false);
   };
 
   const handleExport = () => {
@@ -141,7 +151,7 @@ export function UserSettings() {
         </div>
 
         <div>
-          <label className="label-field">Google Apps Script Web App URL</label>
+          <label className="label-field">Data Backend URL (Google Apps Script)</label>
           <input
             type="url"
             value={googleScriptUrl}
@@ -150,16 +160,30 @@ export function UserSettings() {
             placeholder="https://script.google.com/macros/s/XXXXX/exec"
           />
           <p className="mt-1.5 text-xs text-navy-300">
-            Paste your Google Apps Script Web App URL here. The app works offline without this.
+            Paste the data backend Web App URL here. Handles records, parties, qualities, and workers.
+          </p>
+        </div>
+
+        <div>
+          <label className="label-field">Admin Backend URL (Google Apps Script)</label>
+          <input
+            type="url"
+            value={adminScriptUrl}
+            onChange={(e) => setAdminScriptUrl(e.target.value)}
+            className="input-field"
+            placeholder="https://script.google.com/macros/s/YYYYY/exec"
+          />
+          <p className="mt-1.5 text-xs text-navy-300">
+            Paste the admin backend Web App URL here. Handles login and user account management.
           </p>
         </div>
 
         <div className="flex items-center gap-3 flex-wrap">
           <button
-            onClick={() => { updateSettings({ googleScriptUrl: googleScriptUrl.trim() }); showToast('URL saved', 'success'); }}
+            onClick={() => { updateSettings({ googleScriptUrl: googleScriptUrl.trim(), adminScriptUrl: adminScriptUrl.trim() }); showToast('URLs saved', 'success'); }}
             className="btn-secondary"
           >
-            <Save size={16} /> Save URL
+            <Save size={16} /> Save URLs
           </button>
           <button
             onClick={handleSync}
@@ -168,6 +192,14 @@ export function UserSettings() {
           >
             <RefreshCw size={16} className={syncing ? 'animate-spin' : ''} />
             {syncing ? 'Syncing...' : 'Sync Now'}
+          </button>
+          <button
+            onClick={handleSaveToSheet}
+            disabled={!settings.googleScriptUrl || savingToSheet}
+            className="btn-primary disabled:opacity-50"
+          >
+            <CloudUpload size={16} className={savingToSheet ? 'animate-pulse' : ''} />
+            {savingToSheet ? 'Saving...' : 'Save to Sheet'}
           </button>
         </div>
 
