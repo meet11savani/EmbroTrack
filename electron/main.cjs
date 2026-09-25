@@ -75,6 +75,31 @@ ipcMain.handle('deleteOrder', (_event, id) => {
   return { success: true, id };
 });
 
+// ---- IPC: Google Apps Script HTTP requests ----
+// Apps Script Web Apps respond via a 302 redirect that often lacks CORS headers,
+// making renderer-side fetch() fail with "Failed to fetch" even when the request
+// is correct. Routing through Node's fetch (redirect: 'follow') avoids this.
+ipcMain.handle('googleScriptRequest', async (_event, { url, method, body }) => {
+  try {
+    const options = {
+      method: method || 'GET',
+      redirect: 'follow',
+      headers: {},
+    };
+
+    if (method === 'POST' && body) {
+      options.headers['Content-Type'] = 'text/plain;charset=utf-8';
+      options.body = typeof body === 'string' ? body : JSON.stringify(body);
+    }
+
+    const response = await fetch(url, options);
+    const text = await response.text();
+    return { ok: response.ok, status: response.status, text, error: null };
+  } catch (err) {
+    return { ok: false, status: 0, text: '', error: err instanceof Error ? err.message : String(err) };
+  }
+});
+
 // ---- App lifecycle ----
 
 app.whenReady().then(createWindow);

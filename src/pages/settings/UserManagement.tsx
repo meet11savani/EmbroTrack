@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { UserPlus, Trash2, ShieldCheck, User as UserIcon, X, Save, Eye } from 'lucide-react';
 import { useAuth, type ManagedUser } from '@/context/AuthContext';
+import { useApp } from '@/context/AppContext';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { formatDate, formatDateTime } from '@/utils/formatters';
 
@@ -28,7 +29,8 @@ const EMPTY_FORM: UserFormData = {
 };
 
 export function UserManagement() {
-  const { users, addUser, deleteUser, showToast } = useAuth();
+  const { users, addUser, deleteUser } = useAuth();
+  const { showToast } = useApp();
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState<UserFormData>(EMPTY_FORM);
   const [errors, setErrors] = useState<Record<string, string>>({});

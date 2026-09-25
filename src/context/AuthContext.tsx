@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import { adminApi, type RemoteUser } from '@/services/googleSheets';
@@ -49,7 +48,6 @@ interface AuthContextValue {
 }
 
 const AUTH_STORAGE_KEY = 'he_auth_user';
-const USERS_STORAGE_KEY = 'he_managed_users';
 const DEMO_FIRST_LOGIN_KEY = 'he_demo_first_login';
 const DEMO_EXPIRED_KEY = 'he_demo_expired';
 
@@ -61,19 +59,6 @@ export function useAuth() {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error('useAuth must be used within AuthProvider');
   return ctx;
-}
-
-function loadUsers(): ManagedUser[] {
-  try {
-    const raw = localStorage.getItem(USERS_STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as ManagedUser[]) : [];
-  } catch {
-    return [];
-  }
-}
-
-function genId(): string {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 }
 
 function remoteToLocal(ru: RemoteUser): ManagedUser {
@@ -133,7 +118,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return null;
     }
   });
-  const [users, setUsers] = useState<ManagedUser[]>(() => loadUsers());
+  // Users list is NEVER cached in localStorage — it always comes fresh from the
+  // Apps Script backend. This is the single-source-of-truth principle.
+  const [users, setUsers] = useState<ManagedUser[]>([]);
   const [demoExpired, setDemoExpired] = useState<boolean>(() => isDemoAccountExpired());
   const [demoDaysLeft, setDemoDaysLeft] = useState<number | null>(() => getDemoDaysLeft());
 
@@ -144,10 +131,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.removeItem(AUTH_STORAGE_KEY);
     }
   }, [user]);
-
-  useEffect(() => {
-    localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
-  }, [users]);
 
   useEffect(() => {
     if (!user?.isDemo) return;
@@ -172,10 +155,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => clearInterval(interval);
   }, [user]);
 
-  const getBackendUrl = useCallback((): string => {
-    return storage.getSettings().googleScriptUrl;
-  }, []);
-
   const getAdminUrl = useCallback((): string => {
     return storage.getSettings().adminScriptUrl;
   }, []);
@@ -190,7 +169,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(u);
   }, []);
 
-  const logout = useCallback(() => setUser(null), []);
+  const logout = useCallback(() => {
+    setUsers([]);
+    setUser(null);
+  }, []);
 
   const authenticate = useCallback(async (username: string, password: string): Promise<{ success: boolean; error?: string }> => {
     const adminUrl = getAdminUrl();
@@ -213,61 +195,48 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshUsers = useCallback(async () => {
     const adminUrl = getAdminUrl();
-    if (!adminUrl || !user?.token || !isAdmin) return;
+    if (!adminUrl || !user?.token || user.role !== 'admin') return;
     try {
       const result = await adminApi.getUsers(adminUrl, user.token);
       if (result.success && result.users) {
         setUsers(result.users.map(remoteToLocal));
       }
     } catch {
-      // keep local cache on failure
+      // keep whatever we last loaded; not an error to the caller
     }
   }, [getAdminUrl, user]);
 
   const addUser = useCallback(async (data: Omit<ManagedUser, 'id' | 'createdAt'>): Promise<{ success: boolean; error?: string }> => {
     const adminUrl = getAdminUrl();
-    if (adminUrl && user?.token) {
-      try {
-        const result = await adminApi.createUser(adminUrl, user.token, {
-          username: data.username.trim(),
-          password: data.password,
-          role: data.role,
-          name: data.name.trim(),
-          phone: data.phone,
-          email: data.email,
-          address: data.address,
-          city: data.city,
-          state: data.state,
-          pincode: data.pincode,
-          gstNumber: data.gstNumber,
-          companyName: data.companyName,
-          notes: data.notes,
-          active: data.active,
-        });
-        if (!result.success) {
-          return { success: false, error: result.error ?? 'Failed to create user' };
-        }
-        await refreshUsers();
-        return { success: true };
-      } catch {
-        return { success: false, error: 'Could not reach the server. Check your connection and try again.' };
-      }
+    if (!adminUrl || !user?.token) {
+      return { success: false, error: 'No admin backend configured. Set the Admin Script URL in Settings.' };
     }
-
-    // No admin URL — local only fallback (works only on this device)
-    const exists = users.some((u) => u.username.toLowerCase() === data.username.trim().toLowerCase());
-    if (exists) return { success: false, error: 'Username already exists' };
-
-    const newUser: ManagedUser = {
-      ...data,
-      username: data.username.trim(),
-      name: data.name.trim(),
-      id: genId(),
-      createdAt: new Date().toISOString(),
-    };
-    setUsers((prev) => [...prev, newUser]);
-    return { success: true };
-  }, [getAdminUrl, user, users, refreshUsers]);
+    try {
+      const result = await adminApi.createUser(adminUrl, user.token, {
+        username: data.username.trim(),
+        password: data.password,
+        role: data.role,
+        name: data.name.trim(),
+        phone: data.phone,
+        email: data.email,
+        address: data.address,
+        city: data.city,
+        state: data.state,
+        pincode: data.pincode,
+        gstNumber: data.gstNumber,
+        companyName: data.companyName,
+        notes: data.notes,
+        active: data.active,
+      });
+      if (!result.success) {
+        return { success: false, error: result.error ?? 'Failed to create user' };
+      }
+      await refreshUsers();
+      return { success: true };
+    } catch {
+      return { success: false, error: 'Could not reach the server. Check your connection and try again.' };
+    }
+  }, [getAdminUrl, user, refreshUsers]);
 
   const deleteUser = useCallback(async (id: string): Promise<void> => {
     const found = users.find((u) => u.id === id);
@@ -278,12 +247,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         await adminApi.deleteUser(adminUrl, user.token, found.username);
       } catch {
-        // fall through to local delete
+        // if the server call fails, don't remove locally — keep server as truth
+        return;
       }
     }
 
-    setUsers((prev) => prev.filter((u) => u.id !== id));
-  }, [getAdminUrl, user, users]);
+    await refreshUsers();
+  }, [getAdminUrl, user, users, refreshUsers]);
 
   const isAdmin = user?.role === 'admin';
 

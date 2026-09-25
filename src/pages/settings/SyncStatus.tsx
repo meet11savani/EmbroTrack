@@ -15,7 +15,7 @@ export function SyncStatus() {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  const config = {
+  const config: Record<string, { icon: typeof Cloud; label: string; color: string; dot: string; spin?: boolean }> = {
     local: { icon: CloudOff, label: 'LOCAL', color: 'text-navy-300', dot: 'bg-navy-300' },
     synced: { icon: Check, label: 'SYNCED', color: 'text-success', dot: 'bg-success' },
     syncing: { icon: RefreshCw, label: 'SYNCING...', color: 'text-info', dot: 'bg-info', spin: true },
